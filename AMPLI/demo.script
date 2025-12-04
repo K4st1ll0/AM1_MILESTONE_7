@@ -1,0 +1,38 @@
+Create Spacecraft Sat;
+Create ForceModel FM;
+Create Propagator Prop;
+Create ReportFile DefaultReportFile;
+
+Sat.DateFormat = UTCGregorian;
+Sat.Epoch = '01 Jan 2030 12:00:00.000';
+Sat.CoordinateSystem = EarthMJ2000Eq;
+Sat.DisplayStateType = Cartesian;
+Sat.X = 7000.0;
+Sat.Y = 0;
+Sat.Z = 0;
+Sat.VX = 0;
+Sat.VY = 7.5;
+Sat.VZ = 0;
+
+FM.CentralBody = Earth;
+FM.PrimaryBodies = {Earth};
+FM.Drag = None;
+FM.SRP = Off;
+
+Prop.Type = RungeKutta89;
+Prop.FM = FM;
+Prop.InitialStepSize = 60;
+Prop.Accuracy = 1e-10;
+Prop.MinStep = 0.1;
+Prop.MaxStep = 600;
+
+DefaultReportFile.Filename = 'C:/Users/belen/OneDrive/Desktop/AMPLI/DefaultReportFile.txt';
+DefaultReportFile.WriteHeaders = true;
+DefaultReportFile.Precision = 16;
+DefaultReportFile.AppendToExistingFile = false;
+DefaultReportFile.Add = {Sat.ElapsedDays, Sat.X, Sat.Y, Sat.Z};
+
+BeginMissionSequence;
+Report DefaultReportFile Sat.ElapsedDays Sat.X Sat.Y Sat.Z;
+Propagate Prop(Sat) {Sat.ElapsedDays = 1.0};
+Report DefaultReportFile Sat.ElapsedDays Sat.X Sat.Y Sat.Z;
