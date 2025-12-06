@@ -1,7 +1,9 @@
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QComboBox,
-    QTabWidget, QVBoxLayout, QFormLayout
+    QTabWidget, QVBoxLayout, QFormLayout, QPushButton, QListWidget, QAbstractItemView
 )
+from PySide6.QtCore import Qt
+
 import sys
 
 
@@ -67,19 +69,269 @@ class MainWindow(QWidget):
 
         ### Tab Propagate setup
 
+        # ============================================================
+        # TAB 4: PROPAGATE
+        # ============================================================
+
         tab_propagate = QWidget()
+        form_propagate = QFormLayout()
 
+        # Integrador
+        self.tipo_integrador = QComboBox()
+        self.tipo_integrador.addItems(["RungeKutta89", "PrinceDormand78"])
+        self.initial_step_size = QLineEdit()
+        self.accuracy = QLineEdit()
+        self.min_step_size = QLineEdit()
+        self.max_step_size = QLineEdit()
+        self.mas_step_attemps = QLineEdit()
 
-        # Añadir pestañas
-        tabs.addTab(tab_general, "General")
-        tabs.addTab(tab_spacecraft, "Spacecraft")
-        tabs.addTab(tab_time, "Tiempo")
+        # Force Model
+        self.central_body = QComboBox()
+        self.central_body.addItems(["Tierra", "Luna", "Marte", "Venus", "Júpiter", "Saturno", "Urano", "Neptuno", "Mercurio", "Sol"])
+
+        self.primary_body = QComboBox()
+        self.primary_body.addItems(["Tierra", "Luna", "Marte", "Venus", "Júpiter", "Saturno", "Urano", "Neptuno", "Mercurio", "Sol"])
+
+        self.gmodel = QComboBox()
+        self.gmodel.addItems(["JGM-2", "JGM-3", "EGM-96", "None"])
+
+        self.gdegree = QLineEdit()
+        self.gorder = QLineEdit()
+        self.gSTMLimit = QLineEdit()
+
+        self.drag_atmosphere_model = QComboBox()
+        self.drag_atmosphere_model.addItems(["None", "Jacchia Roberts", "MSISE90"])
+
+        # Drag model —> opciones Spherical / SPADFile
+        self.drag_model = QComboBox()
+        self.drag_model.addItems(["Spherical", "SPADFile"])
+        self.drag_model.setEnabled(False)
+        self.drag_model.hide()
+
+        # Activar / desactivar drag model según atmósfera
+        self.drag_atmosphere_model.currentTextChanged.connect(self.on_atmosphere_changed)
         
 
+        # Añadir campos al formulario propagate
+        form_propagate.addRow("Integrador:", self.tipo_integrador)
+        form_propagate.addRow("Tamaño de paso inicial:", self.initial_step_size)
+        form_propagate.addRow("Precisión (accuracy):", self.accuracy)
+        form_propagate.addRow("Paso mínimo:", self.min_step_size)
+        form_propagate.addRow("Paso máximo:", self.max_step_size)
+        form_propagate.addRow("Intentos máx. paso:", self.mas_step_attemps)
+
+        form_propagate.addRow("Cuerpo central:", self.central_body)
+        form_propagate.addRow("Cuerpo primario:", self.primary_body)
+        form_propagate.addRow("Modelo gravitatorio:", self.gmodel)
+        form_propagate.addRow("Grado:", self.gdegree)
+        form_propagate.addRow("Orden:", self.gorder)
+        form_propagate.addRow("STM Limit:", self.gSTMLimit)
+        form_propagate.addRow("Atmósfera:", self.drag_atmosphere_model)
+        form_propagate.addRow("Modelo de arrastre:", self.drag_model)
+
+        tab_propagate.setLayout(form_propagate)
+
+
+        ### Tab Impulsive burnt setup
+
+        tab_impulsive_burn = QWidget()
+        form_impulsive_burn = QFormLayout()
+
+        self.coordinate_system = QComboBox()
+        self.coordinate_system.addItems(["Local", "EarthMJ2000Eq", "EarthMJ2000Ec", "EarthFixed", "EarthICRF"])
+
+        self.origin = QComboBox()
+        self.origin.addItems(["Tierra", "Luna", "Marte", "Venus", "Júpiter", "Saturno", "Urano", "Neptuno", "Mercurio", "Sol"])
+
+        self.axes = QComboBox()
+        self.axes.addItems(["VNB", "LVLH", "MJ2000Eq", "SpacecraftBody"])
+
+        self.DV_element1 = QLineEdit()
+        self.DV_element2 = QLineEdit()
+        self.DV_element3 = QLineEdit()
+
+        form_impulsive_burn.addRow("Sistema de coordenadas:", self.coordinate_system)
+        form_impulsive_burn.addRow("Origen:", self.origin)
+        form_impulsive_burn.addRow("Axes:", self.axes)
+        form_impulsive_burn.addRow("Delta V Element 1:", self.DV_element1)
+        form_impulsive_burn.addRow("Delta V Element 2:", self.DV_element2)
+        form_impulsive_burn.addRow("Delta V Element 3:", self.DV_element3)
+
+        tab_impulsive_burn.setLayout(form_impulsive_burn)
+
+
+        ### Tab reportfile setup
+
+        tab_reportfile = QWidget()
+        form_reportfile = QFormLayout()
+
+        self.reportfile_name = QLineEdit()
+        self.variable_reportfile = QListWidget()
+        self.variable_reportfile.setMinimumHeight(300)
+        self.variable_reportfile.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.variable_reportfile.addItems([
+                                            # Tiempo
+                                            "UTC (Gregorian)",
+                                            "UTC (ModJulian)",
+                                            "TAI (Gregorian)",
+                                            "TAI (ModJulian)",
+                                            "TT (Gregorian)",
+                                            "TT (ModJulian)",
+                                            "A1 (Gregorian)",
+                                            "A1 (ModJulian)",
+                                            "Epoch",
+                                            "Elapsed Seconds",
+                                            "Elapsed Days",
+
+                                            # Coordenadas cartesianas
+                                            "Posicion X",
+                                            "Posicion Y",
+                                            "Posicion Z",
+                                            "Velocidad VX",
+                                            "Velocidad VY",
+                                            "Velocidad VZ",
+                                            "Magnitud de posicion |R|",
+                                            "Magnitud de velocidad |V|",
+
+                                            # Coordenadas Keplerianas
+                                            "Semieje mayor (SMA)",
+                                            "Excentricidad (ECC)",
+                                            "Inclinacion (INC)",
+                                            "RAAN",
+                                            "Argumento del periapsis (AOP)",
+                                            "Anomalia verdadera (TA)",
+                                            "Anomalia excéntrica (EA)",
+                                            "Anomalia media (MA)",
+
+                                            # Derivados útiles
+                                            "Apoapsis",
+                                            "Periapsis",
+                                            "Altitud",
+                                            "Latitud",
+                                            "Longitud",
+
+                                            # Actitud
+                                            "Cuaternion q1",
+                                            "Cuaternion q2",
+                                            "Cuaternion q3",
+                                            "Cuaternion q4",
+                                            "Angulo de Euler 1",
+                                            "Angulo de Euler 2",
+                                            "Angulo de Euler 3",
+                                            "Matriz DCM 11",
+                                            "Matriz DCM 12",
+                                            "Matriz DCM 13",
+                                            "Matriz DCM 21",
+                                            "Matriz DCM 22",
+                                            "Matriz DCM 23",
+                                            "Matriz DCM 31",
+                                            "Matriz DCM 32",
+                                            "Matriz DCM 33",
+
+                                            # Masa y propelente
+                                            "Masa total",
+                                            "Masa seca",
+                                            "Masa de combustible",
+                                            "Caudal de masa",
+                                            "Isp",
+                                            "Thrust",
+                                            "DeltaV consumido",
+                                            "DeltaV instantáneo",
+
+                                            # Aceleraciones
+                                            "Aceleracion X",
+                                            "Aceleracion Y",
+                                            "Aceleracion Z",
+                                            "Aceleracion total |a|",
+                                            "SRP Flux",
+                                            "Drag Area",
+                                            "SRP Area",
+                                            "Coeficiente de arrastre (Cd)",
+                                            "Coeficiente de sustentación (Cl)",
+
+                                            # Cuerpos celestes (pos y vel)
+                                            "Sol X", "Sol Y", "Sol Z",
+                                            "Sol VX", "Sol VY", "Sol VZ",
+                                            "Tierra X", "Tierra Y", "Tierra Z",
+                                            "Tierra VX", "Tierra VY", "Tierra VZ",
+                                            "Luna X", "Luna Y", "Luna Z",
+                                            "Luna VX", "Luna VY", "Luna VZ",
+                                            "Marte X", "Marte Y", "Marte Z",
+                                            "Marte VX", "Marte VY", "Marte VZ",
+                                            "Júpiter X", "Júpiter Y", "Júpiter Z",
+                                            "Júpiter VX", "Júpiter VY", "Júpiter VZ",
+                                            "Saturno X", "Saturno Y", "Saturno Z",
+                                            "Saturno VX", "Saturno VY", "Saturno VZ",
+                                            "Urano X", "Urano Y", "Urano Z",
+                                            "Urano VX", "Urano VY", "Urano VZ",
+                                            "Neptuno X", "Neptuno Y", "Neptuno Z",
+                                            "Neptuno VX", "Neptuno VY", "Neptuno VZ",
+                                            "Mercurio X", "Mercurio Y", "Mercurio Z",
+                                            "Mercurio VX", "Mercurio VY", "Mercurio VZ",
+                                            "Venus X", "Venus Y", "Venus Z",
+                                            "Venus VX", "Venus VY", "Venus VZ",
+
+                                            # Propagador
+                                            "Step Size",
+                                            "Propagator Type",
+                                            "Integrator Steps Taken",
+
+                                            # Para burns
+                                            "Thrust Magnitude",
+                                            "Mass Flow Rate",
+                                            "Tank Fuel Mass",
+                                            "Tank Pressure",
+                                            "Tank Temperature",
+
+                                            # Optimización y estimación
+                                            "Cost Function",
+                                            "Constraint Value",
+                                            "Measurement",
+                                            "Residual",
+                                            "Truth Measurement",
+                                            "Measurement Noise",
+
+                                            # Tus variables personalizadas
+                                            "TOF",
+                                            "C3",
+                                            "DeltaV",
+                                            "VMAG",
+                                            "Variable personalizada"
+                                        ])
+
+
+
+
+
+        form_reportfile.addRow("Nombre del archivo de reporte:", self.reportfile_name)
+        form_reportfile.addRow("Variables a incluir en el reporte:", self.variable_reportfile)
+        tab_reportfile.setLayout(form_reportfile)
+
+
+        # Añadir pestañas 
+
+        tabs.addTab(tab_general, "General")
+        tabs.addTab(tab_spacecraft, "Spacecraft")
+        tabs.addTab(tab_time, "Time")
+        tabs.addTab(tab_propagate, "Propagate")
+        tabs.addTab(tab_impulsive_burn, "Impulsive Burn")
+        tabs.addTab(tab_reportfile, "Reportfile")
+     
+
+        # ==========================================================
+        # --- BOTÓN GUARDAR DATOS ---
+        # ==========================================================
+        # Añadir pestañas y generar datos
+        self.btn_guardar = QPushButton("Guardar datos en TXT")
+        self.btn_guardar.clicked.connect(self.guardar_datos)
+
         layout.addWidget(tabs)
+        layout.addWidget(self.btn_guardar)
         self.setLayout(layout)
+
+        
     
-    def update_spacecraft_fields(self):
+    def update_spacecraft_fields(self): # Actualiza los campos del formulario según el sistema de coordenadas seleccionado
 
         # 1. Borrar filas antiguas excepto la primera (el combo)
         while self.form_spacecraft.rowCount() > 1:
@@ -97,7 +349,6 @@ class MainWindow(QWidget):
             self.dry_mass_input = QLineEdit()
             self.fuel_mass_input = QLineEdit()
             self.tanks_input = QLineEdit()
-            self.drag_input = QLineEdit()
             self.epoch_input = QComboBox()
             self.epoch_input.addItems(["UTC", "Julian Dates"])###########################
 
@@ -110,7 +361,6 @@ class MainWindow(QWidget):
             self.form_spacecraft.addRow("Masa en seco [kg]:", self.dry_mass_input)
             self.form_spacecraft.addRow("Masa de combustible [kg]:", self.fuel_mass_input)
             self.form_spacecraft.addRow("Número de tanques:", self.tanks_input)
-            self.form_spacecraft.addRow("Arrastre:", self.drag_input)
             self.form_spacecraft.addRow("Formato de fecha:", self.epoch_input)
 
         else:  # Keplerianas
@@ -123,7 +373,6 @@ class MainWindow(QWidget):
             self.dry_mass_input = QLineEdit()
             self.fuel_mass_input = QLineEdit()
             self.tanks_input = QLineEdit()
-            self.drag_input = QLineEdit()
             self.epoch_input = QComboBox()
             self.epoch_input.addItems(["UTC", "Julian Dates"])###########################
 
@@ -136,8 +385,102 @@ class MainWindow(QWidget):
             self.form_spacecraft.addRow("Masa en seco [kg]:", self.dry_mass_input)
             self.form_spacecraft.addRow("Masa de combustible [kg]:", self.fuel_mass_input)
             self.form_spacecraft.addRow("Número de tanques:", self.tanks_input)
-            self.form_spacecraft.addRow("Arrastre:", self.drag_input)
             self.form_spacecraft.addRow("Formato de fecha:", self.epoch_input)
+    
+    def on_atmosphere_changed(self, text):
+        if text != "None":
+            self.drag_model.setEnabled(True)
+            self.drag_model.show()
+        else:
+            self.drag_model.setEnabled(False)
+            self.drag_model.hide()
+
+
+    # ==========================================================
+    # FUNCIÓN PARA GUARDAR DATOS EN UN TXT
+    # ==========================================================
+    def guardar_datos(self): # Recopila los datos de todas las pestañas y los guarda en un archivo TXT
+
+        datos = []
+
+        # --- GENERAL ---
+        datos.append("=== GENERAL ===")
+        datos.append(f"Nombre nave: {self.nombre_nave.text()}")
+        datos.append(f"Cuerpo central: {self.Cuerpo_central.currentText()}")
+        datos.append(f"Sistema de referencia: {self.Sistema_de_referencia.currentText()}")
+        datos.append(f"Formato de tiempo: {self.formato_tiempo.currentText()}")
+
+        # --- SPACECRAFT ---
+        datos.append("\n=== SPACECRAFT ===")
+        datos.append(f"Sistema de coordenadas: {self.coordinates.currentText()}")
+
+        if self.coordinates.currentText() == "Cartesianas":
+            datos.append(f"x: {self.x_input.text()}")
+            datos.append(f"y: {self.y_input.text()}")
+            datos.append(f"z: {self.z_input.text()}")
+            datos.append(f"vx: {self.vx_input.text()}")
+            datos.append(f"vy: {self.vy_input.text()}")
+            datos.append(f"vz: {self.vz_input.text()}")
+        else:
+            datos.append(f"SMA: {self.SMA_input.text()}")
+            datos.append(f"ECC: {self.ECC_input.text()}")
+            datos.append(f"INC: {self.INC_input.text()}")
+            datos.append(f"RAAN: {self.RAAN_input.text()}")
+            datos.append(f"AOP: {self.AOP_input.text()}")
+            datos.append(f"TA: {self.TA_input.text()}")
+
+        datos.append(f"Masa seca: {self.dry_mass_input.text()}")
+        datos.append(f"Masa combustible: {self.fuel_mass_input.text()}")
+        datos.append(f"Tanques: {self.tanks_input.text()}")
+        datos.append(f"Formato epoch: {self.epoch_input.currentText()}")
+
+        # --- TIME ---
+        datos.append("\n=== TIEMPO ===")
+        datos.append(f"Fecha inicio: {self.fecha_inicio.text()}")
+        datos.append(f"Fecha final: {self.fecha_final.text()}")
+        datos.append(f"Paso temporal: {self.paso_temporal.text()}")
+
+        # --- PROPAGATE ---
+        datos.append("\n=== PROPAGATE ===")
+        datos.append(f"Tipo de integrador: {self.tipo_integrador.currentText()}")
+        datos.append(f"Tamaño de paso inicial: {self.initial_step_size.text()}")
+        datos.append(f"Precision (accuracy): {self.accuracy.text()}")
+        datos.append(f"Paso minimo: {self.min_step_size.text()}")
+        datos.append(f"Paso maximo: {self.max_step_size.text()}")
+        datos.append(f"Intentos max. paso: {self.mas_step_attemps.text()}")
+        datos.append(f"Cuerpo central: {self.central_body.currentText()}")
+        datos.append(f"Cuerpo primario: {self.primary_body.currentText()}")
+        datos.append(f"Modelo gravitatorio: {self.gmodel.currentText()}")
+        datos.append(f"Grado: {self.gdegree.text()}")
+        datos.append(f"Orden: {self.gorder.text()}")
+        datos.append(f"STM Limit: {self.gSTMLimit.text()}")
+        datos.append(f"Atmosfera: {self.drag_atmosphere_model.currentText()}")
+        datos.append(f"Modelo de arrastre: {self.drag_model.currentText()}")
+
+        # --- IMPULSIVE BURN ---
+        datos.append("\n=== IMPULSIVE BURN ===")
+        datos.append(f"Sistema de coordenadas: {self.coordinate_system.currentText()}")
+        datos.append(f"Origen: {self.origin.currentText()}")
+        datos.append(f"Axes: {self.axes.currentText()}")
+        datos.append(f"Delta V Element 1: {self.DV_element1.text()}")
+        datos.append(f"Delta V Element 2: {self.DV_element2.text()}")
+        datos.append(f"Delta V Element 3: {self.DV_element3.text()}")
+
+
+        # --- REPORTFILE ---
+        datos.append("\n=== REPORTFILE ===")
+        datos.append(f"Nombre del archivo de reporte: {self.reportfile_name.text()}")
+        selected_variables = [item.text() for item in self.variable_reportfile.selectedItems()]
+        datos.append(f"Variables a incluir en el reporte (ctrl + click): {', '.join(selected_variables)}")
+        
+
+
+        # --- GUARDAR ---
+        with open("datos_guardados.txt", "w") as f:
+            f.write("\n".join(datos))
+
+        print("Archivo guardado: datos_guardados.txt")
+
 
 
 
