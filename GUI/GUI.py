@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from pathlib import Path
 import sys
+import subprocess
 
 
 class MainWindow(QWidget):
@@ -343,6 +344,25 @@ class MainWindow(QWidget):
             f.write("\n".join(datos))
 
         print(f"Archivo guardado en: {ruta}")
+
+        # ================================
+        # EJECUTAR TRANSPILER AUTOMÁTICAMENTE
+        # ================================
+
+        transpiler_path = base_dir.parent / "Transpiler" / "Transpiler.py"
+
+        print("Lanzando Transpiler...")
+
+        try:
+            subprocess.run(
+                ["python", str(transpiler_path)],
+                check=True
+            )
+            print("✅ Transpiler ejecutado correctamente.")
+        except subprocess.CalledProcessError as e:
+            print("❌ Error al ejecutar el Transpiler:")
+            print(e)
+
 
 
 
