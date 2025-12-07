@@ -2,8 +2,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).parent          # .../AM1_MILESTONE_7/GUI
 DATA_FILE = BASE_DIR.parent / "Datos" / "datos_guardados.txt"
-SCRIPT_PATH = BASE_DIR / "demo.script"
-
+SCRIPT_PATH = BASE_DIR.parent / "Transpiler_output" / "demo.script"
 
 
 def map_body(spanish_name: str) -> str:
@@ -188,9 +187,32 @@ def build_gmat_script(cfg: dict, script_path: Path):
     date_format = map_time_format(time_fmt)
 
     # ========== TIEMPO ==========
-    epoch_str = tm.get("Fecha inicio", "01 Jan 2030 12:00:00.000")
-    if ":" not in epoch_str:
-        epoch_str = epoch_str.strip() + " 12:00:00.000"
+    epoch_str_raw = tm.get("Fecha inicio", "").strip()
+
+    def normalize_epoch(epoch: str) -> str:
+        if "/" in epoch:
+            parts = epoch.split()
+            date_part = parts[0]
+            time_part = parts[1] if len(parts) > 1 else "12:00:00"
+
+            d, m, y = date_part.split("/")
+            months = {
+                "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
+                "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
+                "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"
+            }
+
+            return f"{d} {months[m]} {y} {time_part}.000"
+
+        if ":" in epoch:
+            if not epoch.endswith(".000"):
+                return epoch + ".000"
+            return epoch
+
+        return "01 Jan 2030 12:00:00.000"
+
+    epoch_str = normalize_epoch(epoch_str_raw)
+
 
     paso_str = tm.get("Paso temporal", "").strip()
     if paso_str == "":
@@ -322,17 +344,30 @@ def build_gmat_script(cfg: dict, script_path: Path):
         lines.append("ImpBurn.DecrementMass   = false;")
         lines.append("")
 
-    # --- ReportFile ---
-    report_path_str = str((script_path.parent / "DefaultReportFile.txt").as_posix())
+    # --- ReportFile (RUTA RELATIVA, PORTABLE) ---
+
+    # script_path = AM1_MILESTONE_7/Transpiler_output/demo.script
+    BASE_PROJECT_DIR = script_path.parent.parent   # -> AM1_MILESTONE_7
+
+    OUTPUT_DIR = BASE_PROJECT_DIR / "GMAT_output"
+    OUTPUT_DIR.mkdir(exist_ok=True)
+
+    report_path = OUTPUT_DIR / "DefaultReportFile.txt"
+
+    # GMAT 2019 acepta perfectamente rutas con '/'
+    report_path_str = report_path.as_posix()
+
     lines.append(f"DefaultReportFile.Filename = '{report_path_str}';")
     lines.append("DefaultReportFile.WriteHeaders = true;")
     lines.append("DefaultReportFile.Precision = 16;")
-    lines.append("DefaultReportFile.AppendToExistingFile = false;")
     lines.append(
         f"DefaultReportFile.Add = "
         f"{{{sat_name}.ElapsedDays, {sat_name}.X, {sat_name}.Y, {sat_name}.Z}};"
     )
     lines.append("")
+
+
+
 
     # --- Mission Sequence ---
     lines.append("BeginMissionSequence;")
@@ -383,3 +418,16 @@ if __name__ == "__main__":
 
     # Y ahora generamos el script
     build_gmat_script(cfg, SCRIPT_PATH)
+
+
+#### Ejecutar GMAT en modo consola ####
+
+import subprocess
+
+gmat_console = r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"
+script_path  = str(SCRIPT_PATH)
+
+print("Lanzando GMAT en modo consola...")
+subprocess.run([gmat_console, script_path], check=True)
+print("GMAT ha terminado la ejecución.")
+

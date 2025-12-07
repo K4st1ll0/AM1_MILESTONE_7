@@ -1,48 +1,48 @@
 === GENERAL ===
-Nombre nave: 23
+Nombre nave: Blip-A
 Cuerpo central: Tierra
-Sistema de referencia: Ecliptico
+Sistema de referencia: Ecuatorial
 Formato de tiempo: UTC
 
 === SPACECRAFT ===
-Sistema de coordenadas: Cartesianas
-x: 234ew
-y: 2321e
-z: dswdWDAS
-vx: DSDAS
-vy: DS
-vz: XZSDSX
-Masa seca: DQWE
-Masa combustible: D
+Sistema de coordenadas: Keplerianas
+SMA: 7206.82
+ECC: 0.004
+INC: 75
+RAAN: 360
+AOP: 332.885
+TA: 8.54
+Masa seca: 250
+Masa combustible: 0
 Formato epoch: UTC
 
 === TIEMPO ===
-Fecha inicio: QWEWQE
-Fecha final: QWE
+Fecha inicio: 01/07/2025 12:00:00
+Fecha final: 
 
 === PROPAGATE ===
 Tipo de integrador: RungeKutta89
-Tamaño de paso inicial: EWEWQWE
-Precision (accuracy): WWE
-Paso minimo: EWQ
-Paso maximo: WEWE
-Intentos max. paso: EWEWQWE
+Tamaño de paso inicial: 60
+Precision (accuracy): 9.99e-12
+Paso minimo: 0.001
+Paso maximo: 2700
+Intentos max. paso: 50
 Cuerpo central: Tierra
 Cuerpo primario: Tierra
 Modelo gravitatorio: JGM-2
-Grado: EWEQEW
-Orden: EWEW
-STM Limit: EWQWQE
-Atmosfera: None
+Grado: 4
+Orden: 4
+STM Limit: 100
+Atmosfera: MSISE90
 Modelo de arrastre: Spherical
 
 === IMPULSIVE BURN ===
 Sistema de coordenadas: Local
 Origen: Tierra
 Axes: VNB
-Delta V Element 1: QEWQWE
-Delta V Element 2: EWQQWEEW
-Delta V Element 3: WQEE
+Delta V Element 1: 0
+Delta V Element 2: 0
+Delta V Element 3: 0
 
 === REPORTFILE ===
 Nombre del archivo de reporte: ReportFile

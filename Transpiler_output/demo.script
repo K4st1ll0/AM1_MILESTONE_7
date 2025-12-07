@@ -1,0 +1,38 @@
+Create Spacecraft BlipA;
+Create ForceModel FM;
+Create Propagator Prop;
+Create ReportFile DefaultReportFile;
+
+BlipA.DateFormat = UTCGregorian;
+BlipA.Epoch = '01 Jul 2025 12:00:00.000';
+BlipA.CoordinateSystem = EarthMJ2000Eq;
+BlipA.DisplayStateType = Keplerian;
+BlipA.SMA  = 7206.82;
+BlipA.ECC  = 0.004;
+BlipA.INC  = 75.0;
+BlipA.RAAN = 360.0;
+BlipA.AOP  = 332.885;
+BlipA.TA   = 8.54;
+
+FM.CentralBody   = Earth;
+FM.PrimaryBodies = {Earth};
+FM.Drag = None;
+FM.SRP  = Off;
+
+Prop.Type            = RungeKutta89;
+Prop.FM              = FM;
+Prop.InitialStepSize = 60.0;
+Prop.Accuracy        = 9.99e-12;
+Prop.MinStep         = 0.001;
+Prop.MaxStep         = 2700.0;
+Prop.MaxStepAttempts = 50;
+
+DefaultReportFile.Filename = 'c:/Users/Pablo Castillo/Desktop/MUSE/AM1/AM1_MILESTONE_7/GMAT_output/DefaultReportFile.txt';
+DefaultReportFile.WriteHeaders = true;
+DefaultReportFile.Precision = 16;
+DefaultReportFile.Add = {BlipA.ElapsedDays, BlipA.X, BlipA.Y, BlipA.Z};
+
+BeginMissionSequence;
+Report DefaultReportFile BlipA.ElapsedDays BlipA.X BlipA.Y BlipA.Z;
+Propagate Prop(BlipA) {BlipA.ElapsedDays = 1.0};
+Report DefaultReportFile BlipA.ElapsedDays BlipA.X BlipA.Y BlipA.Z;
