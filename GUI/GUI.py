@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QTabWidget, QVBoxLayout, QFormLayout, QPushButton, QListWidget, QAbstractItemView
 )
 from PySide6.QtCore import Qt
-
+from pathlib import Path
 import sys
 
 
@@ -25,7 +25,7 @@ class MainWindow(QWidget):
         self.Cuerpo_central = QComboBox()
         self.Cuerpo_central.addItems(["Tierra", "Luna", "Marte", "Venus", "Júpiter", "Saturno", "Urano", "Neptuno", "Mercurio", "Sol"])
         self.Sistema_de_referencia = QComboBox()
-        self.Sistema_de_referencia.addItems(["Eclíptico", "Ecuatorial"]) ##############################
+        self.Sistema_de_referencia.addItems(["Ecliptico", "Ecuatorial"]) ##############################
         self.formato_tiempo = QComboBox()
         self.formato_tiempo.addItems(["UTC", "TAI", "TT"]) ##############################
         form_general.addRow("Nombre de la nave:", self.nombre_nave)
@@ -116,7 +116,7 @@ class MainWindow(QWidget):
 
         # Añadir campos al formulario propagate
         form_propagate.addRow("Integrador:", self.tipo_integrador)
-        form_propagate.addRow("Tamaño de paso inicial:", self.initial_step_size)
+        form_propagate.addRow("Size paso inicial:", self.initial_step_size)
         form_propagate.addRow("Precisión (accuracy):", self.accuracy)
         form_propagate.addRow("Paso mínimo:", self.min_step_size)
         form_propagate.addRow("Paso máximo:", self.max_step_size)
@@ -161,19 +161,6 @@ class MainWindow(QWidget):
 
         tab_impulsive_burn.setLayout(form_impulsive_burn)
 
-
-        ### Tab reportfile setup
-
-        tab_reportfile = QWidget()
-        form_reportfile = QFormLayout()
-       
-        self.reportfile_name = QLineEdit()
-        self.reportfile_name.setPlaceholderText("DefaultReportFile.txt")
-
-        form_reportfile.addRow("Nombre del archivo de reporte:", self.reportfile_name)
-        tab_reportfile.setLayout(form_reportfile)
-
-
         # Añadir pestañas 
 
         tabs.addTab(tab_general, "General")
@@ -181,7 +168,7 @@ class MainWindow(QWidget):
         tabs.addTab(tab_time, "Time")
         tabs.addTab(tab_propagate, "Propagate")
         tabs.addTab(tab_impulsive_burn, "Impulsive Burn")
-        tabs.addTab(tab_reportfile, "Reportfile")
+   
      
     
 
@@ -339,16 +326,24 @@ class MainWindow(QWidget):
 
 
         # --- REPORTFILE ---
+        # --- REPORTFILE ---
         datos.append("\n=== REPORTFILE ===")
-        datos.append(f"Nombre del archivo de reporte: {self.reportfile_name}")
+        datos.append("Nombre del archivo de reporte: ReportFile")
+
         
-
-
         # --- GUARDAR ---
-        with open("datos_guardados.txt", "w") as f:
+
+        # Carpeta donde está este archivo GUI.py
+        base_dir = Path(__file__).resolve().parent
+
+        # Subir un nivel y entrar en Datos
+        ruta = base_dir.parent / "Datos" / "datos_guardados.txt"
+
+        with open(ruta, "w", encoding="utf-8") as f:
             f.write("\n".join(datos))
 
-        print("Archivo guardado: datos_guardados.txt")
+        print(f"Archivo guardado en: {ruta}")
+
 
 
 

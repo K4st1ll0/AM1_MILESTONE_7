@@ -1,0 +1,48 @@
+=== GENERAL ===
+Nombre nave: 23
+Cuerpo central: Tierra
+Sistema de referencia: Ecliptico
+Formato de tiempo: UTC
+
+=== SPACECRAFT ===
+Sistema de coordenadas: Cartesianas
+x: 234ew
+y: 2321e
+z: dswdWDAS
+vx: DSDAS
+vy: DS
+vz: XZSDSX
+Masa seca: DQWE
+Masa combustible: D
+Formato epoch: UTC
+
+=== TIEMPO ===
+Fecha inicio: QWEWQE
+Fecha final: QWE
+
+=== PROPAGATE ===
+Tipo de integrador: RungeKutta89
+Tamaño de paso inicial: EWEWQWE
+Precision (accuracy): WWE
+Paso minimo: EWQ
+Paso maximo: WEWE
+Intentos max. paso: EWEWQWE
+Cuerpo central: Tierra
+Cuerpo primario: Tierra
+Modelo gravitatorio: JGM-2
+Grado: EWEQEW
+Orden: EWEW
+STM Limit: EWQWQE
+Atmosfera: None
+Modelo de arrastre: Spherical
+
+=== IMPULSIVE BURN ===
+Sistema de coordenadas: Local
+Origen: Tierra
+Axes: VNB
+Delta V Element 1: QEWQWE
+Delta V Element 2: EWQQWEEW
+Delta V Element 3: WQEE
+
+=== REPORTFILE ===
+Nombre del archivo de reporte: ReportFile

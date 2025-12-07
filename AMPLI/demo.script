@@ -22,21 +22,21 @@ FM.SRP  = Off;
 
 Prop.Type            = RungeKutta89;
 Prop.FM              = FM;
-Prop.InitialStepSize = 10.0;   % 10 s
+Prop.InitialStepSize = 60.0;
 Prop.Accuracy        = 1e-06;
-Prop.MinStep         = 10.0;
-Prop.MaxStep         = 10.0;
+Prop.MinStep         = 0.1;
+Prop.MaxStep         = 600.0;
 Prop.MaxStepAttempts = 50;
 
 ImpBurn.CoordinateSystem = EarthMJ2000Ec;
 ImpBurn.Origin          = Earth;
 ImpBurn.Axes            = VNB;
-ImpBurn.Element1        = 5.0;
+ImpBurn.Element1        = 0.1;
 ImpBurn.Element2        = 0.0;
 ImpBurn.Element3        = 0.0;
 ImpBurn.DecrementMass   = false;
 
-DefaultReportFile.Filename = 'c:/Users/belen/OneDrive/Desktop/AMPLI/DefaultReportFile.txt';
+DefaultReportFile.Filename = 'c:/Users/Pablo Castillo/Desktop/MUSE/AM1/AM1_MILESTONE_7/AMPLI/DefaultReportFile.txt';
 DefaultReportFile.WriteHeaders = true;
 DefaultReportFile.Precision = 16;
 DefaultReportFile.AppendToExistingFile = false;
