@@ -1,51 +1,48 @@
 === GENERAL ===
-Nombre nave: 111
+Nombre nave: eee
 Cuerpo central: Tierra
 Sistema de referencia: Eclíptico
 Formato de tiempo: UTC
 
 === SPACECRAFT ===
 Sistema de coordenadas: Cartesianas
-x: 11
-y: 11
-z: 11
-vx: 11111
-vy: 11
-vz: 11
-Masa seca: 11
-Masa combustible: 1
-Tanques: 111
+x: eee
+y: ee
+z: ee
+vx: e
+vy: eee
+vz: ee
+Masa seca: e
+Masa combustible: e
 Formato epoch: UTC
 
 === TIEMPO ===
-Fecha inicio: 1
-Fecha final: 11
-Paso temporal: 1
+Fecha inicio: eee
+Fecha final: eee
 
 === PROPAGATE ===
 Tipo de integrador: RungeKutta89
-Tamaño de paso inicial: 11
-Precisión (accuracy): 11
-Paso mínimo: 11
-Paso máximo: 11
-Intentos máx. paso: 111
-Cuerpo central: Marte
+Tamaño de paso inicial: 3w3
+Precision (accuracy): wrw
+Paso minimo: rwr3
+Paso maximo: rsewerwrw
+Intentos max. paso: wer
+Cuerpo central: Tierra
 Cuerpo primario: Tierra
 Modelo gravitatorio: JGM-2
-Grado: 11
-Orden: 11
-STM Limit: 1
-Atmósfera: None
+Grado: ewew
+Orden: weee
+STM Limit: re
+Atmosfera: None
 Modelo de arrastre: Spherical
 
 === IMPULSIVE BURN ===
-Sistema de coordenadas: EarthMJ2000Eq
+Sistema de coordenadas: Local
 Origen: Tierra
 Axes: VNB
-Delta V Element 1: 111
-Delta V Element 2: 11
-Delta V Element 3: 1111
+Delta V Element 1: e3r3r
+Delta V Element 2: 3wr3
+Delta V Element 3: rwr3w3r
 
 === REPORTFILE ===
-Nombre del archivo de reporte: 111
-Variables a incluir en el reporte (ctrl + click): Elapsed Days, Posicion X, TAI (ModJulian), TT (ModJulian), A1 (ModJulian)
+Nombre del archivo de reporte: <PySide6.QtWidgets.QLineEdit(0x1e797d03ae0) at 0x000001E79996CF80>

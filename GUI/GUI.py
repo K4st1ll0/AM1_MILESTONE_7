@@ -32,6 +32,9 @@ class MainWindow(QWidget):
         form_general.addRow("Cuerpo central:", self.Cuerpo_central)
         form_general.addRow("Sistema de referencia:", self.Sistema_de_referencia)
         form_general.addRow("Formato de tiempo:", self.formato_tiempo)
+        self.formato_tiempo.currentTextChanged.connect(lambda _: self.actualizar_formato_tiempo())
+
+
 
         tab_general.setLayout(form_general)
 
@@ -59,19 +62,18 @@ class MainWindow(QWidget):
 
         self.fecha_inicio = QLineEdit()
         self.fecha_final = QLineEdit()
-        self.paso_temporal = QLineEdit()
-        
+
         form_time.addRow("Fecha de inicio:", self.fecha_inicio)
         form_time.addRow("Fecha final:", self.fecha_final)
-        form_time.addRow("Paso temporal:", self.paso_temporal)
+
         tab_time.setLayout(form_time)
+
+        # Llamada inicial
+        self.actualizar_formato_tiempo()
+
 
 
         ### Tab Propagate setup
-
-        # ============================================================
-        # TAB 4: PROPAGATE
-        # ============================================================
 
         tab_propagate = QWidget()
         form_propagate = QFormLayout()
@@ -164,147 +166,11 @@ class MainWindow(QWidget):
 
         tab_reportfile = QWidget()
         form_reportfile = QFormLayout()
-
+       
         self.reportfile_name = QLineEdit()
-        self.variable_reportfile = QListWidget()
-        self.variable_reportfile.setMinimumHeight(300)
-        self.variable_reportfile.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.variable_reportfile.addItems([
-                                            # Tiempo
-                                            "UTC (Gregorian)",
-                                            "UTC (ModJulian)",
-                                            "TAI (Gregorian)",
-                                            "TAI (ModJulian)",
-                                            "TT (Gregorian)",
-                                            "TT (ModJulian)",
-                                            "A1 (Gregorian)",
-                                            "A1 (ModJulian)",
-                                            "Epoch",
-                                            "Elapsed Seconds",
-                                            "Elapsed Days",
-
-                                            # Coordenadas cartesianas
-                                            "Posicion X",
-                                            "Posicion Y",
-                                            "Posicion Z",
-                                            "Velocidad VX",
-                                            "Velocidad VY",
-                                            "Velocidad VZ",
-                                            "Magnitud de posicion |R|",
-                                            "Magnitud de velocidad |V|",
-
-                                            # Coordenadas Keplerianas
-                                            "Semieje mayor (SMA)",
-                                            "Excentricidad (ECC)",
-                                            "Inclinacion (INC)",
-                                            "RAAN",
-                                            "Argumento del periapsis (AOP)",
-                                            "Anomalia verdadera (TA)",
-                                            "Anomalia excéntrica (EA)",
-                                            "Anomalia media (MA)",
-
-                                            # Derivados útiles
-                                            "Apoapsis",
-                                            "Periapsis",
-                                            "Altitud",
-                                            "Latitud",
-                                            "Longitud",
-
-                                            # Actitud
-                                            "Cuaternion q1",
-                                            "Cuaternion q2",
-                                            "Cuaternion q3",
-                                            "Cuaternion q4",
-                                            "Angulo de Euler 1",
-                                            "Angulo de Euler 2",
-                                            "Angulo de Euler 3",
-                                            "Matriz DCM 11",
-                                            "Matriz DCM 12",
-                                            "Matriz DCM 13",
-                                            "Matriz DCM 21",
-                                            "Matriz DCM 22",
-                                            "Matriz DCM 23",
-                                            "Matriz DCM 31",
-                                            "Matriz DCM 32",
-                                            "Matriz DCM 33",
-
-                                            # Masa y propelente
-                                            "Masa total",
-                                            "Masa seca",
-                                            "Masa de combustible",
-                                            "Caudal de masa",
-                                            "Isp",
-                                            "Thrust",
-                                            "DeltaV consumido",
-                                            "DeltaV instantáneo",
-
-                                            # Aceleraciones
-                                            "Aceleracion X",
-                                            "Aceleracion Y",
-                                            "Aceleracion Z",
-                                            "Aceleracion total |a|",
-                                            "SRP Flux",
-                                            "Drag Area",
-                                            "SRP Area",
-                                            "Coeficiente de arrastre (Cd)",
-                                            "Coeficiente de sustentación (Cl)",
-
-                                            # Cuerpos celestes (pos y vel)
-                                            "Sol X", "Sol Y", "Sol Z",
-                                            "Sol VX", "Sol VY", "Sol VZ",
-                                            "Tierra X", "Tierra Y", "Tierra Z",
-                                            "Tierra VX", "Tierra VY", "Tierra VZ",
-                                            "Luna X", "Luna Y", "Luna Z",
-                                            "Luna VX", "Luna VY", "Luna VZ",
-                                            "Marte X", "Marte Y", "Marte Z",
-                                            "Marte VX", "Marte VY", "Marte VZ",
-                                            "Júpiter X", "Júpiter Y", "Júpiter Z",
-                                            "Júpiter VX", "Júpiter VY", "Júpiter VZ",
-                                            "Saturno X", "Saturno Y", "Saturno Z",
-                                            "Saturno VX", "Saturno VY", "Saturno VZ",
-                                            "Urano X", "Urano Y", "Urano Z",
-                                            "Urano VX", "Urano VY", "Urano VZ",
-                                            "Neptuno X", "Neptuno Y", "Neptuno Z",
-                                            "Neptuno VX", "Neptuno VY", "Neptuno VZ",
-                                            "Mercurio X", "Mercurio Y", "Mercurio Z",
-                                            "Mercurio VX", "Mercurio VY", "Mercurio VZ",
-                                            "Venus X", "Venus Y", "Venus Z",
-                                            "Venus VX", "Venus VY", "Venus VZ",
-
-                                            # Propagador
-                                            "Step Size",
-                                            "Propagator Type",
-                                            "Integrator Steps Taken",
-
-                                            # Para burns
-                                            "Thrust Magnitude",
-                                            "Mass Flow Rate",
-                                            "Tank Fuel Mass",
-                                            "Tank Pressure",
-                                            "Tank Temperature",
-
-                                            # Optimización y estimación
-                                            "Cost Function",
-                                            "Constraint Value",
-                                            "Measurement",
-                                            "Residual",
-                                            "Truth Measurement",
-                                            "Measurement Noise",
-
-                                            # Tus variables personalizadas
-                                            "TOF",
-                                            "C3",
-                                            "DeltaV",
-                                            "VMAG",
-                                            "Variable personalizada"
-                                        ])
-
-
-
-
+        self.reportfile_name.setPlaceholderText("DefaultReportFile.txt")
 
         form_reportfile.addRow("Nombre del archivo de reporte:", self.reportfile_name)
-        form_reportfile.addRow("Variables a incluir en el reporte:", self.variable_reportfile)
         tab_reportfile.setLayout(form_reportfile)
 
 
@@ -317,6 +183,7 @@ class MainWindow(QWidget):
         tabs.addTab(tab_impulsive_burn, "Impulsive Burn")
         tabs.addTab(tab_reportfile, "Reportfile")
      
+    
 
         # ==========================================================
         # --- BOTÓN GUARDAR DATOS ---
@@ -329,7 +196,18 @@ class MainWindow(QWidget):
         layout.addWidget(self.btn_guardar)
         self.setLayout(layout)
 
-        
+    def actualizar_formato_tiempo(self):
+        self.fecha_inicio.clear()
+        self.fecha_final.clear()
+
+        if self.formato_tiempo.currentText() == "UTC":
+            self.fecha_inicio.setPlaceholderText("DD/MM/AAAA HH:MM:SS")
+            self.fecha_final.setPlaceholderText("DD/MM/AAAA HH:MM:SS")
+        else:
+            self.fecha_inicio.setPlaceholderText("Días desde t0")
+            self.fecha_final.setPlaceholderText("Días desde t0")
+
+
     
     def update_spacecraft_fields(self): # Actualiza los campos del formulario según el sistema de coordenadas seleccionado
 
@@ -345,10 +223,8 @@ class MainWindow(QWidget):
             self.vx_input = QLineEdit()
             self.vy_input = QLineEdit()
             self.vz_input = QLineEdit()
-
             self.dry_mass_input = QLineEdit()
             self.fuel_mass_input = QLineEdit()
-            self.tanks_input = QLineEdit()
             self.epoch_input = QComboBox()
             self.epoch_input.addItems(["UTC", "Julian Dates"])###########################
 
@@ -360,7 +236,6 @@ class MainWindow(QWidget):
             self.form_spacecraft.addRow("vz:", self.vz_input)
             self.form_spacecraft.addRow("Masa en seco [kg]:", self.dry_mass_input)
             self.form_spacecraft.addRow("Masa de combustible [kg]:", self.fuel_mass_input)
-            self.form_spacecraft.addRow("Número de tanques:", self.tanks_input)
             self.form_spacecraft.addRow("Formato de fecha:", self.epoch_input)
 
         else:  # Keplerianas
@@ -372,7 +247,6 @@ class MainWindow(QWidget):
             self.TA_input = QLineEdit()
             self.dry_mass_input = QLineEdit()
             self.fuel_mass_input = QLineEdit()
-            self.tanks_input = QLineEdit()
             self.epoch_input = QComboBox()
             self.epoch_input.addItems(["UTC", "Julian Dates"])###########################
 
@@ -384,7 +258,6 @@ class MainWindow(QWidget):
             self.form_spacecraft.addRow("True Anomaly (TA):", self.TA_input)
             self.form_spacecraft.addRow("Masa en seco [kg]:", self.dry_mass_input)
             self.form_spacecraft.addRow("Masa de combustible [kg]:", self.fuel_mass_input)
-            self.form_spacecraft.addRow("Número de tanques:", self.tanks_input)
             self.form_spacecraft.addRow("Formato de fecha:", self.epoch_input)
     
     def on_atmosphere_changed(self, text):
@@ -431,14 +304,12 @@ class MainWindow(QWidget):
 
         datos.append(f"Masa seca: {self.dry_mass_input.text()}")
         datos.append(f"Masa combustible: {self.fuel_mass_input.text()}")
-        datos.append(f"Tanques: {self.tanks_input.text()}")
         datos.append(f"Formato epoch: {self.epoch_input.currentText()}")
 
         # --- TIME ---
         datos.append("\n=== TIEMPO ===")
         datos.append(f"Fecha inicio: {self.fecha_inicio.text()}")
         datos.append(f"Fecha final: {self.fecha_final.text()}")
-        datos.append(f"Paso temporal: {self.paso_temporal.text()}")
 
         # --- PROPAGATE ---
         datos.append("\n=== PROPAGATE ===")
@@ -469,9 +340,7 @@ class MainWindow(QWidget):
 
         # --- REPORTFILE ---
         datos.append("\n=== REPORTFILE ===")
-        datos.append(f"Nombre del archivo de reporte: {self.reportfile_name.text()}")
-        selected_variables = [item.text() for item in self.variable_reportfile.selectedItems()]
-        datos.append(f"Variables a incluir en el reporte (ctrl + click): {', '.join(selected_variables)}")
+        datos.append(f"Nombre del archivo de reporte: {self.reportfile_name}")
         
 
 
