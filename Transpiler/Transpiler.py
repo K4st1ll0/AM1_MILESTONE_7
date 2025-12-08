@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 BASE_DIR = Path(__file__).parent          # .../AM1_MILESTONE_7/GUI
 DATA_FILE = BASE_DIR.parent / "Datos" / "datos_guardados.txt"
@@ -421,13 +422,42 @@ if __name__ == "__main__":
 
 
 #### Ejecutar GMAT en modo consola ####
+# ================================
+# DETECCIÓN AUTOMÁTICA DE GMAT
+# ================================
 
-import subprocess
 
-gmat_console = r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"
-script_path  = str(SCRIPT_PATH)
+def find_gmat():
+    posibles = [
+        Path(r"C:\Program Files\GMAT\bin\GmatConsole.exe"),
+        Path(r"C:\Program Files (x86)\GMAT\bin\GmatConsole.exe"),
+        Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
+    ]
 
-print("Lanzando GMAT en modo consola...")
-subprocess.run([gmat_console, script_path], check=True)
-print("GMAT ha terminado la ejecución.")
+    for p in posibles:
+        if p.exists():
+            return str(p)
+
+    raise FileNotFoundError("❌ GMAT no está instalado o no se encontró GmatConsole.exe")
+
+
+# ================================
+# EJECUCIÓN DE GMAT
+# ================================
+
+try:
+    gmat_console = find_gmat()
+    script_path  = str(SCRIPT_PATH)
+
+    print("Lanzando GMAT en modo consola...")
+    subprocess.run([gmat_console, script_path], check=True)
+    print("✅ GMAT ha terminado la ejecución correctamente.")
+
+except FileNotFoundError as e:
+    print(e)
+    print("Instala GMAT antes de ejecutar el simulador.")
+
+except subprocess.CalledProcessError as e:
+    print("❌ Error al ejecutar GMAT")
+    print(e)
 

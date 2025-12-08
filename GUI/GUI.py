@@ -354,10 +354,15 @@ class MainWindow(QWidget):
         print("Lanzando Transpiler...")
 
         try:
+            # subprocess.run(
+            #     ["python", str(transpiler_path)],
+            #     check=True
+            # )
             subprocess.run(
-                ["python", str(transpiler_path)],
-                check=True
+            [sys.executable, str(transpiler_path)],
+            check=True
             )
+
             print("✅ Transpiler ejecutado correctamente.")
         except subprocess.CalledProcessError as e:
             print("❌ Error al ejecutar el Transpiler:")
