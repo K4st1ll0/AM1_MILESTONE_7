@@ -1,0 +1,4 @@
+MiNabo.ElapsedDays        MiNabo.X                  MiNabo.Y                  MiNabo.Z                  
+0                         2                         1.039409812325549         2.630518435982034         
+MiNabo.ElapsedDays        MiNabo.X                  MiNabo.Y                  MiNabo.Z                  
+0                         2                         1.039409812325549         2.630518435982034         

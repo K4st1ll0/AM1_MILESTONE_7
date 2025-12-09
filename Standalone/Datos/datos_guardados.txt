@@ -1,0 +1,48 @@
+=== GENERAL ===
+Nombre nave: MiNabo
+Cuerpo central: Tierra
+Sistema de referencia: Ecliptico
+Formato de tiempo: UTC
+
+=== SPACECRAFT ===
+Sistema de coordenadas: Cartesianas
+x: 2
+y: 2
+z: 2
+vx: 2
+vy: 2
+vz: 2
+Masa seca: 100
+Masa combustible: 1000
+Formato epoch: UTC
+
+=== TIEMPO ===
+Fecha inicio: 11/07/2010 21:00:00
+Fecha final: 
+
+=== PROPAGATE ===
+Tipo de integrador: RungeKutta89
+Tamaño de paso inicial: 
+Precision (accuracy): 
+Paso minimo: 
+Paso maximo: 
+Intentos max. paso: 
+Cuerpo central: Tierra
+Cuerpo primario: Tierra
+Modelo gravitatorio: JGM-2
+Grado: 2
+Orden: 4
+STM Limit: 4
+Atmosfera: None
+Modelo de arrastre: Spherical
+
+=== IMPULSIVE BURN ===
+Sistema de coordenadas: Local
+Origen: Tierra
+Axes: VNB
+Delta V Element 1: 
+Delta V Element 2: 
+Delta V Element 3: 
+
+=== REPORTFILE ===
+Nombre del archivo de reporte: ReportFile

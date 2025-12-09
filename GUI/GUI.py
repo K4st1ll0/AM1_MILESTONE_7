@@ -6,6 +6,17 @@ from PySide6.QtCore import Qt
 from pathlib import Path
 import sys
 import subprocess
+from Transpiler.Transpiler import run_transpiler
+
+
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        # Estamos en el .exe
+        return Path(sys.executable).resolve().parent
+    else:
+        # Estamos en modo .py normal (subimos desde GUI/)
+        return Path(__file__).resolve().parent.parent
+
 
 
 class MainWindow(QWidget):
@@ -334,11 +345,13 @@ class MainWindow(QWidget):
         
         # --- GUARDAR ---
 
-        # Carpeta donde está este archivo GUI.py
-        base_dir = Path(__file__).resolve().parent
+        # Base portable (vale para .py y .exe)
+        base_dir = get_base_dir()
+        ruta = base_dir / "Datos" / "datos_guardados.txt"
 
-        # Subir un nivel y entrar en Datos
-        ruta = base_dir.parent / "Datos" / "datos_guardados.txt"
+        # Asegurar que la carpeta exista
+        ruta.parent.mkdir(exist_ok=True)
+
 
         with open(ruta, "w", encoding="utf-8") as f:
             f.write("\n".join(datos))
@@ -352,23 +365,50 @@ class MainWindow(QWidget):
         transpiler_path = base_dir.parent / "Transpiler" / "Transpiler.py"
 
         print("Lanzando Transpiler...")
+        run_transpiler()
+        print("✅ Transpiler ejecutado correctamente.")
+        # ================================
+        # LANZAR GMAT DESPUÉS DEL TRANSPILER
+        # ================================
+
+        def find_gmat():
+            posibles = [
+                Path(r"C:\Program Files\GMAT\bin\GmatConsole.exe"),
+                Path(r"C:\Program Files (x86)\GMAT\bin\GmatConsole.exe"),
+                Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
+            ]
+
+            for p in posibles:
+                if p.exists():
+                    return str(p)
+
+            raise FileNotFoundError("GMAT no está instalado o no se encontró GmatConsole.exe")
+
 
         try:
-            # subprocess.run(
-            #     ["python", str(transpiler_path)],
-            #     check=True
-            # )
+            gmat_console = find_gmat()
+            script_path = base_dir / "Transpiler_output" / "demo.script"
+
+            if not script_path.exists():
+                raise FileNotFoundError(f"No existe el script: {script_path}")
+
+            print("Lanzando GMAT desde la GUI...")
+
             subprocess.run(
-            [sys.executable, str(transpiler_path)],
-            check=True
+                [gmat_console, str(script_path)],
+                cwd=str(base_dir),      # ✅ ESTO ES LA CLAVE
+                check=True
             )
 
-            print("✅ Transpiler ejecutado correctamente.")
-        except subprocess.CalledProcessError as e:
-            print("❌ Error al ejecutar el Transpiler:")
-            print(e)
+            print("✅ GMAT ejecutado correctamente.")
 
+        except Exception as e:
+            # Como estás en --noconsole, guardamos el error en un log
+            error_log = base_dir / "error_gmat.txt"
+            with open(error_log, "w", encoding="utf-8") as f:
+                f.write(str(e))
 
+            print("❌ Error al ejecutar GMAT. Ver error_gmat.txt")
 
 
 

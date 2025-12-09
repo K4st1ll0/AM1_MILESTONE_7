@@ -12,6 +12,11 @@
    'C:\\Users\\Pablo '
    'Castillo\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\PySide6\\support\\deprecated.py',
    'PYMODULE'),
+  ('Transpiler', '-', 'PYMODULE'),
+  ('Transpiler.Transpiler',
+   'C:\\Users\\Pablo '
+   'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\Transpiler\\Transpiler.py',
+   'PYMODULE'),
   ('__future__',
    'C:\\Users\\Pablo '
    'Castillo\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\__future__.py',

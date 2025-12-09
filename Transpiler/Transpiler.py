@@ -1,9 +1,21 @@
 from pathlib import Path
 import subprocess
+import sys
 
-BASE_DIR = Path(__file__).parent          # .../AM1_MILESTONE_7/GUI
-DATA_FILE = BASE_DIR.parent / "Datos" / "datos_guardados.txt"
-SCRIPT_PATH = BASE_DIR.parent / "Transpiler_output" / "demo.script"
+
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        # Estamos dentro del .exe
+        return Path(sys.executable).resolve().parent
+    else:
+        # Estamos en modo script normal
+        return Path(__file__).resolve().parent.parent
+
+
+BASE_DIR = get_base_dir()
+DATA_FILE = BASE_DIR / "Datos" / "datos_guardados.txt"
+SCRIPT_PATH = BASE_DIR / "Transpiler_output" / "demo.script"
+
 
 
 def map_body(spanish_name: str) -> str:
@@ -348,7 +360,7 @@ def build_gmat_script(cfg: dict, script_path: Path):
     # --- ReportFile (RUTA RELATIVA, PORTABLE) ---
 
     # script_path = AM1_MILESTONE_7/Transpiler_output/demo.script
-    BASE_PROJECT_DIR = script_path.parent.parent   # -> AM1_MILESTONE_7
+    BASE_PROJECT_DIR = BASE_DIR
 
     OUTPUT_DIR = BASE_PROJECT_DIR / "GMAT_output"
     OUTPUT_DIR.mkdir(exist_ok=True)
@@ -445,19 +457,13 @@ def find_gmat():
 # EJECUCIÓN DE GMAT
 # ================================
 
-try:
-    gmat_console = find_gmat()
-    script_path  = str(SCRIPT_PATH)
 
-    print("Lanzando GMAT en modo consola...")
-    subprocess.run([gmat_console, script_path], check=True)
-    print("✅ GMAT ha terminado la ejecución correctamente.")
+def run_transpiler():
+    # Asegurar carpetas
+    (BASE_DIR / "Transpiler_output").mkdir(exist_ok=True)
+    (BASE_DIR / "GMAT_output").mkdir(exist_ok=True)
 
-except FileNotFoundError as e:
-    print(e)
-    print("Instala GMAT antes de ejecutar el simulador.")
+    cfg = parse_gui_txt(DATA_FILE)
+    build_gmat_script(cfg, SCRIPT_PATH)
 
-except subprocess.CalledProcessError as e:
-    print("❌ Error al ejecutar GMAT")
-    print(e)
 

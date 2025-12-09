@@ -1,0 +1,1 @@
+Command '['C:\\Program Files (x86)\\GMAT-R2019aBeta-Windows-x64-public\\bin\\GmatConsole.exe', 'C:\\Users\\Pablo Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\Standalone\\Transpiler_output\\demo.script']' returned non-zero exit status 1.
