@@ -1,0 +1,128 @@
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # Necesario para 3D
+
+
+# === RUTAS ===
+STANDALONE_DIR = Path(__file__).resolve().parent.parent 
+GMAT_OUTPUT_DIR = STANDALONE_DIR / "GMAT_output"
+PLOTS_DIR = STANDALONE_DIR / "Plots"
+
+REPORT_PATH = GMAT_OUTPUT_DIR / "DefaultReportFile.txt"
+
+
+def load_report(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        raise FileNotFoundError(f"No se encuentra el report: {path}")
+
+    # Leemos separado por espacios (uno o más)
+    df = pd.read_csv(path, sep=r"\s+", engine="python")
+
+    # Forzar a numérico y eliminar filas no numéricas (cabeceras repetidas, etc.)
+    df = df.apply(pd.to_numeric, errors="coerce").dropna()
+
+    if df.shape[1] < 7:
+        raise ValueError(
+            f"El report tiene {df.shape[1]} columnas, "
+            "pero esperaba al menos 7 (t, X, Y, Z, VX, VY, VZ)."
+        )
+
+    return df
+
+
+def make_plots(df: pd.DataFrame):
+    PLOTS_DIR.mkdir(exist_ok=True)
+
+    cols = df.columns.tolist()
+    t_col  = cols[0]
+    x_col  = cols[1]
+    y_col  = cols[2]
+    z_col  = cols[3]
+    vx_col = cols[4]
+    vy_col = cols[5]
+    vz_col = cols[6]
+
+    t  = df[t_col].values
+    x  = df[x_col].values
+    y  = df[y_col].values
+    z  = df[z_col].values
+    vx = df[vx_col].values
+    vy = df[vy_col].values
+    vz = df[vz_col].values
+
+    speed = np.sqrt(vx**2 + vy**2 + vz**2)
+
+    # === 1) Trayectoria 3D ===
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    ax.plot(x, y, z)
+    ax.set_xlabel("X [km]")
+    ax.set_ylabel("Y [km]")
+    ax.set_zlabel("Z [km]")
+    ax.set_title("Trayectoria 3D")
+    ax.set_box_aspect([1, 1, 1])  # ejes a la misma escala
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "trayectoria_3D.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+    # === 2) Órbita en plano XY ===
+    fig, ax = plt.subplots()
+    ax.plot(x, y)
+    ax.set_xlabel("X [km]")
+    ax.set_ylabel("Y [km]")
+    ax.set_title("Órbita en el plano XY")
+    ax.axis("equal")
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "orbita_XY.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+    # === 3) Componentes de velocidad vs tiempo ===
+    fig, ax = plt.subplots()
+    ax.plot(t, vx, label="Vx")
+    ax.plot(t, vy, label="Vy")
+    ax.plot(t, vz, label="Vz")
+    ax.set_xlabel("Tiempo [días]")
+    ax.set_ylabel("Velocidad [km/s]")
+    ax.set_title("Componentes de velocidad vs tiempo")
+    ax.grid(True)
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "velocidades_vs_tiempo.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+    # === 4) Módulo de la velocidad vs tiempo ===
+    fig, ax = plt.subplots()
+    ax.plot(t, speed)
+    ax.set_xlabel("Tiempo [días]")
+    ax.set_ylabel("|V| [km/s]")
+    ax.set_title("Módulo de la velocidad vs tiempo")
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "velocidad_modulo_vs_tiempo.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+    print("✅ Gráficas guardadas en:", PLOTS_DIR)
+
+from pathlib import Path
+import sys
+
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).resolve().parent
+    else:
+        return Path(__file__).resolve().parent.parent
+
+BASE_DIR = get_base_dir()
+REPORT_PATH = BASE_DIR / "GMAT_output" / "DefaultReportFile.txt"
+
+
+
+
+if __name__ == "__main__":
+    print("Leyendo report de:", REPORT_PATH)
+    df = load_report(REPORT_PATH)
+    print("Columnas leídas:", df.columns.tolist())
+    make_plots(df)

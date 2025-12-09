@@ -1,18 +1,18 @@
-Create Spacecraft MiNabo;
+Create Spacecraft MiNaboTiseo;
 Create ForceModel FM;
 Create Propagator Prop;
 Create ReportFile DefaultReportFile;
 
-MiNabo.DateFormat = UTCGregorian;
-MiNabo.Epoch = '11 Jul 2010 21:00:00.000';
-MiNabo.CoordinateSystem = EarthMJ2000Ec;
-MiNabo.DisplayStateType = Cartesian;
-MiNabo.X  = 2.0;
-MiNabo.Y  = 2.0;
-MiNabo.Z  = 2.0;
-MiNabo.VX = 2.0;
-MiNabo.VY = 2.0;
-MiNabo.VZ = 2.0;
+MiNaboTiseo.DateFormat = UTCGregorian;
+MiNaboTiseo.Epoch = '09 Dec 2025 12:00:00.000';
+MiNaboTiseo.CoordinateSystem = EarthMJ2000Ec;
+MiNaboTiseo.DisplayStateType = Keplerian;
+MiNaboTiseo.SMA  = 31780.0;
+MiNaboTiseo.ECC  = 0.7936;
+MiNaboTiseo.INC  = 75.0;
+MiNaboTiseo.RAAN = 360.0;
+MiNaboTiseo.AOP  = 332.88;
+MiNaboTiseo.TA   = 1.9e-06;
 
 FM.CentralBody   = Earth;
 FM.PrimaryBodies = {Earth};
@@ -30,9 +30,9 @@ Prop.MaxStepAttempts = 50;
 DefaultReportFile.Filename = 'C:/Users/Pablo Castillo/Desktop/MUSE/AM1/AM1_MILESTONE_7/Standalone/GMAT_output/DefaultReportFile.txt';
 DefaultReportFile.WriteHeaders = true;
 DefaultReportFile.Precision = 16;
-DefaultReportFile.Add = {MiNabo.ElapsedDays, MiNabo.X, MiNabo.Y, MiNabo.Z};
+DefaultReportFile.Add = {MiNaboTiseo.ElapsedDays, MiNaboTiseo.X, MiNaboTiseo.Y, MiNaboTiseo.Z};
 
 BeginMissionSequence;
-Report DefaultReportFile MiNabo.ElapsedDays MiNabo.X MiNabo.Y MiNabo.Z;
-Propagate Prop(MiNabo) {MiNabo.ElapsedDays = 1.0};
-Report DefaultReportFile MiNabo.ElapsedDays MiNabo.X MiNabo.Y MiNabo.Z;
+Report DefaultReportFile MiNaboTiseo.ElapsedDays MiNaboTiseo.X MiNaboTiseo.Y MiNaboTiseo.Z;
+Propagate Prop(MiNaboTiseo) {MiNaboTiseo.ElapsedDays = 1.0};
+Report DefaultReportFile MiNaboTiseo.ElapsedDays MiNaboTiseo.X MiNaboTiseo.Y MiNaboTiseo.Z;

@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import subprocess
 from Transpiler.Transpiler import run_transpiler
+from Plots import plot_results
 
 
 def get_base_dir():
@@ -409,6 +410,33 @@ class MainWindow(QWidget):
                 f.write(str(e))
 
             print("❌ Error al ejecutar GMAT. Ver error_gmat.txt")
+
+        # ================================
+        # EJECUTAR SCRIPT DE PLOTS
+        # ================================
+
+        # ================================
+        # EJECUTAR SCRIPT DE PLOTS (MODO CORRECTO EN EXE)
+        # ================================
+
+        try:
+            print("Generando gráficas automáticamente...")
+
+            BASE_DIR = get_base_dir()
+            REPORT_PATH = BASE_DIR / "GMAT_output" / "DefaultReportFile.txt"
+
+            df = plot_results.load_report(REPORT_PATH)
+            plot_results.make_plots(df)
+
+            print("✅ Gráficas generadas correctamente en la carpeta Plots.")
+
+        except Exception as e:
+            error_plot = BASE_DIR / "error_plots.txt"
+            with open(error_plot, "w", encoding="utf-8") as f:
+                f.write(str(e))
+
+            print("❌ Error generando gráficas. Ver error_plots.txt")
+
 
 
 

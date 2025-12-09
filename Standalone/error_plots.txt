@@ -1,0 +1,1 @@
+El report tiene 4 columnas, pero esperaba al menos 7 (t, X, Y, Z, VX, VY, VZ).

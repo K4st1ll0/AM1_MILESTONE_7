@@ -1,24 +1,24 @@
 === GENERAL ===
-Nombre nave: MiNabo
+Nombre nave: MiNaboTiseo
 Cuerpo central: Tierra
 Sistema de referencia: Ecliptico
 Formato de tiempo: UTC
 
 === SPACECRAFT ===
-Sistema de coordenadas: Cartesianas
-x: 2
-y: 2
-z: 2
-vx: 2
-vy: 2
-vz: 2
-Masa seca: 100
-Masa combustible: 1000
+Sistema de coordenadas: Keplerianas
+SMA: 31780
+ECC: 0.7936
+INC: 75
+RAAN: 360
+AOP: 332.88
+TA: 1.9e-06
+Masa seca: 250
+Masa combustible: 
 Formato epoch: UTC
 
 === TIEMPO ===
-Fecha inicio: 11/07/2010 21:00:00
-Fecha final: 
+Fecha inicio: 09/12/2025 12:00:00
+Fecha final: 18/12/2025 12:00:00
 
 === PROPAGATE ===
 Tipo de integrador: RungeKutta89
@@ -30,10 +30,10 @@ Intentos max. paso:
 Cuerpo central: Tierra
 Cuerpo primario: Tierra
 Modelo gravitatorio: JGM-2
-Grado: 2
+Grado: 4
 Orden: 4
-STM Limit: 4
-Atmosfera: None
+STM Limit: 100
+Atmosfera: MSISE90
 Modelo de arrastre: Spherical
 
 === IMPULSIVE BURN ===
