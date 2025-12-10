@@ -1,0 +1,38 @@
+Create Spacecraft MINABO;
+Create ForceModel FM;
+Create Propagator Prop;
+Create ReportFile DefaultReportFile;
+
+MINABO.DateFormat = UTCGregorian;
+MINABO.Epoch = '10 Dec 2025 12:00:00.000';
+MINABO.CoordinateSystem = EarthMJ2000Ec;
+MINABO.DisplayStateType = Cartesian;
+MINABO.X  = 11.0;
+MINABO.Y  = 111.0;
+MINABO.Z  = 11.0;
+MINABO.VX = 11.0;
+MINABO.VY = 11.0;
+MINABO.VZ = 11.0;
+
+FM.CentralBody   = Earth;
+FM.PrimaryBodies = {Earth};
+FM.Drag = None;
+FM.SRP  = Off;
+
+Prop.Type            = RungeKutta89;
+Prop.FM              = FM;
+Prop.InitialStepSize = 10.0;
+Prop.Accuracy        = 0.0001;
+Prop.MinStep         = 0.01;
+Prop.MaxStep         = 300.0;
+Prop.MaxStepAttempts = 50;
+
+DefaultReportFile.Filename = 'C:/Users/Pablo Castillo/Desktop/MUSE/AM1/AM1_MILESTONE_7/Standalone/GMAT_output/DefaultReportFile.txt';
+DefaultReportFile.WriteHeaders = true;
+DefaultReportFile.Precision = 16;
+DefaultReportFile.Add = {MINABO.ElapsedDays, MINABO.X, MINABO.Y, MINABO.Z, MINABO.VX, MINABO.VY, MINABO.VZ};
+
+BeginMissionSequence;
+Report DefaultReportFile MINABO.ElapsedDays MINABO.X MINABO.Y MINABO.Z MINABO.VX MINABO.VY MINABO.VZ;
+Propagate Prop(MINABO) {MINABO.ElapsedDays = 1.0};
+Report DefaultReportFile MINABO.ElapsedDays MINABO.X MINABO.Y MINABO.Z MINABO.VX MINABO.VY MINABO.VZ;

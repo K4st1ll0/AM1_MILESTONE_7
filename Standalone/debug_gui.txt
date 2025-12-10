@@ -1,0 +1,2 @@
+✅ He entrado en guardar_datos()
+BASE_DIR = C:\Users\Pablo Castillo\Desktop\MUSE\AM1\AM1_MILESTONE_7\Standalone

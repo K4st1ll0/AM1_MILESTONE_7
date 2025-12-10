@@ -177,6 +177,9 @@ class MainWindow(QWidget):
         self.DV_element1 = QLineEdit()
         self.DV_element2 = QLineEdit()
         self.DV_element3 = QLineEdit()
+        ##### AGREGADOOOOOO
+        self.burn_time1 = QLineEdit()
+        self.burn_time1.setPlaceholderText("Días desde inicio (por ejemplo 0.5)")
 
         form_impulsive_burn.addRow("Sistema de coordenadas:", self.coordinate_system)
         form_impulsive_burn.addRow("Origen:", self.origin)
@@ -184,8 +187,40 @@ class MainWindow(QWidget):
         form_impulsive_burn.addRow("Delta V Element 1:", self.DV_element1)
         form_impulsive_burn.addRow("Delta V Element 2:", self.DV_element2)
         form_impulsive_burn.addRow("Delta V Element 3:", self.DV_element3)
+        form_impulsive_burn.addRow("Tiempo burn [días]:", self.burn_time1) ##### AGREGADOOOOO
 
         tab_impulsive_burn.setLayout(form_impulsive_burn)
+
+        ### Tab Impulsive Burn 2 setup AGREGADOOOOOOOO
+
+        tab_impulsive_burn2 = QWidget()
+        form_impulsive_burn2 = QFormLayout()
+
+        self.coordinate_system2 = QComboBox()
+        self.coordinate_system2.addItems(["Local", "EarthMJ2000Eq", "EarthMJ2000Ec", "EarthFixed", "EarthICRF"])
+
+        self.origin2 = QComboBox()
+        self.origin2.addItems(["Tierra", "Luna", "Marte", "Venus", "Júpiter", "Saturno", "Urano", "Neptuno", "Mercurio", "Sol"])
+
+        self.axes2 = QComboBox()
+        self.axes2.addItems(["VNB", "LVLH", "MJ2000Eq", "SpacecraftBody"])
+
+        self.DV_element1_2 = QLineEdit()
+        self.DV_element2_2 = QLineEdit()
+        self.DV_element3_2 = QLineEdit()
+
+        self.burn_time2 = QLineEdit()
+        self.burn_time2.setPlaceholderText("Días desde inicio (por ejemplo 1.2)")
+
+        form_impulsive_burn2.addRow("Sistema de coordenadas:", self.coordinate_system2)
+        form_impulsive_burn2.addRow("Origen:", self.origin2)
+        form_impulsive_burn2.addRow("Axes:", self.axes2)
+        form_impulsive_burn2.addRow("Delta V Element 1:", self.DV_element1_2)
+        form_impulsive_burn2.addRow("Delta V Element 2:", self.DV_element2_2)
+        form_impulsive_burn2.addRow("Delta V Element 3:", self.DV_element3_2)
+        form_impulsive_burn2.addRow("Tiempo burn [días]:", self.burn_time2)
+
+        tab_impulsive_burn2.setLayout(form_impulsive_burn2)
 
         # Añadir pestañas 
 
@@ -194,6 +229,7 @@ class MainWindow(QWidget):
         tabs.addTab(tab_time, "Time")
         tabs.addTab(tab_propagate, "Propagate")
         tabs.addTab(tab_impulsive_burn, "Impulsive Burn")
+        tabs.addTab(tab_impulsive_burn2, "Impulsive Burn 2") #AGREGADOOOOOO
    
      
     
@@ -359,7 +395,17 @@ class MainWindow(QWidget):
         datos.append(f"Delta V Element 1: {self.DV_element1.text()}")
         datos.append(f"Delta V Element 2: {self.DV_element2.text()}")
         datos.append(f"Delta V Element 3: {self.DV_element3.text()}")
+        datos.append(f"Tiempo burn: {self.burn_time1.text()}") #### AGREGADOOOOOOO
 
+        # --- IMPULSIVE BURN 2 --- AGREGADOOOOOOOOO
+        datos.append("\n=== IMPULSIVE BURN 2 ===")
+        datos.append(f"Sistema de coordenadas: {self.coordinate_system2.currentText()}")
+        datos.append(f"Origen: {self.origin2.currentText()}")
+        datos.append(f"Axes: {self.axes2.currentText()}")
+        datos.append(f"Delta V Element 1: {self.DV_element1_2.text()}")
+        datos.append(f"Delta V Element 2: {self.DV_element2_2.text()}")
+        datos.append(f"Delta V Element 3: {self.DV_element3_2.text()}")
+        datos.append(f"Tiempo burn: {self.burn_time2.text()}")
 
         # --- REPORTFILE ---
         # --- REPORTFILE ---
@@ -408,7 +454,8 @@ class MainWindow(QWidget):
             posibles = [
                 Path(r"C:\Program Files\GMAT\bin\GmatConsole.exe"),
                 Path(r"C:\Program Files (x86)\GMAT\bin\GmatConsole.exe"),
-                Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
+                Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"),
+                Path(r"C:\Users\titan\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
             ]
 
             for p in posibles:

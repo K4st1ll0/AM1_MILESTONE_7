@@ -18,10 +18,12 @@ DATA_FILE  = BASE_DIR / "Datos" / "datos_guardados.txt"
 SCRIPT_PATH = BASE_DIR / "Transpiler_output" / "demo.script"
 GMAT_OUTPUT_DIR = BASE_DIR / "GMAT_output"
 
+# BASE_DIR   = get_base_dir()
+# DATA_FILE  = BASE_DIR / "Standalone"/ "Datos" / "datos_guardados.txt"
+# SCRIPT_PATH = BASE_DIR / "Standalone"/ "Transpiler_output" / "demo.script"
+# GMAT_OUTPUT_DIR = BASE_DIR / "GMAT_output"
 
-# BASE_DIR = get_base_dir()
-# DATA_FILE = BASE_DIR / "Datos" / "datos_guardados.txt"
-# SCRIPT_PATH = BASE_DIR / "Transpiler_output" / "demo.script"
+
 
 
 def map_body(spanish_name: str) -> str:
@@ -103,6 +105,7 @@ def parse_gui_txt(path: Path) -> dict:
         "time": {},
         "propagate": {},
         "impulsive_burn": {},
+        "impulsive_burn_2": {},   #AGREGADOOOO
         "reportfile": {},
     }
     current_section = None
@@ -127,6 +130,8 @@ def parse_gui_txt(path: Path) -> dict:
                     current_section = "time"
                 elif "PROPAGATE" in line:
                     current_section = "propagate"
+                elif "IMPULSIVE BURN 2" in line:          # AGREGADOOOO
+                    current_section = "impulsive_burn_2"
                 elif "IMPULSIVE BURN" in line:
                     current_section = "impulsive_burn"
                 elif "REPORTFILE" in line:
@@ -191,7 +196,8 @@ def build_gmat_script(cfg: dict, script_path: Path):
     sc  = cfg["spacecraft"]
     tm  = cfg["time"]
     pr  = cfg["propagate"]
-    ib  = cfg["impulsive_burn"]
+    ib1 = cfg["impulsive_burn"]
+    ib2 = cfg.get("impulsive_burn_2", {})
 
     # ========== GENERAL ==========
     sat_name_raw = gen.get("Nombre nave", "").strip()
@@ -202,10 +208,16 @@ def build_gmat_script(cfg: dict, script_path: Path):
     sistema_ref  = gen.get("Sistema de referencia", "Ecuatorial")
     coord_system = map_coord_system(central_en, sistema_ref)
 
+    # Ejes (ecuatorial vs eclíptica) en GMAT
+    if coord_system.endswith("MJ2000Ec"):
+        axes_type = "MJ2000Ec"   # eclíptica
+    else:
+        axes_type = "MJ2000Eq"   # ecuatorial por defecto
+
+
     time_fmt    = gen.get("Formato de tiempo", "UTC")
     date_format = map_time_format(time_fmt)
 
-    # ========== TIEMPO ==========
     # ========== TIEMPO ==========
 
     start_raw = tm.get("Fecha inicio", "").strip()
@@ -228,19 +240,17 @@ def build_gmat_script(cfg: dict, script_path: Path):
 
         # Caso con hora incluida
         if ":" in s:
-            # primero intentamos dd/mmm/YYYY HH:MM:SS
             for fmt in ("%d %b %Y %H:%M:%S", "%d/%m/%Y %H:%M:%S"):
                 try:
                     dt = datetime.strptime(s, fmt)
                     return dt.strftime("%d %b %Y %H:%M:%S.000")
                 except ValueError:
                     pass
-            # Si no hemos podido parsear, como mínimo añadimos .000
             if not s.endswith(".000"):
                 return s + ".000"
             return s
 
-        # Caso solo fecha: probamos dos formatos
+        # Solo fecha
         for fmt in ("%d %b %Y", "%d/%m/%Y"):
             try:
                 dt = datetime.strptime(s, fmt)
@@ -248,11 +258,9 @@ def build_gmat_script(cfg: dict, script_path: Path):
             except ValueError:
                 pass
 
-        # Si todo falla:
         return "01 Jan 2030 12:00:00.000"
 
     def parse_date_only(s: str):
-        """Devuelve un datetime sin hora a partir de '08 Dec 2024' o '08/12/2024'."""
         s = s.strip()
         if not s:
             return None
@@ -263,21 +271,19 @@ def build_gmat_script(cfg: dict, script_path: Path):
                 pass
         return None
 
-    # Epoch = fecha de inicio normalizada
     epoch_str = normalize_epoch(start_raw)
 
-    # Duración = (Fecha final - Fecha inicio) en días, si se puede
     start_dt = parse_date_only(start_raw)
     end_dt   = parse_date_only(end_raw)
 
     if start_dt and end_dt and end_dt > start_dt:
         dur_days = (end_dt - start_dt).total_seconds() / 86400.0
     else:
-        # Si algo falla, por defecto 1 día
-        dur_days = 1.0
+        dur_days = 1.0   # por defecto
 
-
+    
     # ========== SPACECRAFT ==========
+
     coord_type = sc.get("Sistema de coordenadas", "Cartesianas").strip()
 
     # Cartesianas
@@ -296,18 +302,13 @@ def build_gmat_script(cfg: dict, script_path: Path):
     aop  = to_float(sc.get("AOP",  "0.0"),  default=0.0)
     ta   = to_float(sc.get("TA",   "0.0"),  default=0.0)
 
-    # ========== PROPAGATE (desde GUI) ==========
+    # ========== PROPAGATE ==========
     integ_type = pr.get("Tipo de integrador", "RungeKutta89").strip() or "RungeKutta89"
 
-    # init_step = positive_or_default(pr.get("Tamano de paso inicial", "60"),   60.0)
-    # accuracy  = positive_or_default(pr.get("Precision (accuracy)", "1e-6"),   1e-6)
-    # min_step  = positive_or_default(pr.get("Paso minimo", "0.1"),             0.1)
-    # max_step  = positive_or_default(pr.get("Paso maximo", "600"),             600.0)
     init_step = positive_or_default(pr.get("Tamano de paso inicial", "10"),   10.0)
     accuracy  = positive_or_default(pr.get("Precision (accuracy)", "1e-4"),   1e-4)
     min_step  = positive_or_default(pr.get("Paso minimo", "0.01"),            0.01)
     max_step  = positive_or_default(pr.get("Paso maximo", "300"),             300.0)
-
 
     max_step_attempts_str = pr.get("Intentos max. paso", "50")
     try:
@@ -317,43 +318,90 @@ def build_gmat_script(cfg: dict, script_path: Path):
     except Exception:
         max_step_attempts = 50
 
-    # (Opcional: podrías usar estos más adelante)
     fm_central_es = pr.get("Cuerpo central", gen.get("Cuerpo central", "Tierra"))
     fm_central_en = map_body(fm_central_es)
 
-    # ========== IMPULSIVE BURN (desde GUI) ==========
-    ib_coord_raw = ib.get("Sistema de coordenadas", "Local").strip()
-    ib_origin_es = ib.get("Origen", central_es)
-    ib_axes      = ib.get("Axes", "VNB").strip()
+    # ========== IMPULSIVE BURN 1 ==========
+    ib1_coord_raw = ib1.get("Sistema de coordenadas", "Local").strip()
+    ib1_origin_es = ib1.get("Origen", central_es)
+    ib1_axes      = ib1.get("Axes", "VNB").strip()
 
-    dv1 = to_float(ib.get("Delta V Element 1", "0"), 0.0)
-    dv2 = to_float(ib.get("Delta V Element 2", "0"), 0.0)
-    dv3 = to_float(ib.get("Delta V Element 3", "0"), 0.0)
+    dv1_1 = to_float(ib1.get("Delta V Element 1", "0"), 0.0)
+    dv1_2 = to_float(ib1.get("Delta V Element 2", "0"), 0.0)
+    dv1_3 = to_float(ib1.get("Delta V Element 3", "0"), 0.0)
 
-    has_burn = (abs(dv1) + abs(dv2) + abs(dv3)) > 0.0
+    has_burn1 = (abs(dv1_1) + abs(dv1_2) + abs(dv1_3)) > 0.0
 
-    # "Local" => usa el mismo sistema de coordenadas que el spacecraft
-    if ib_coord_raw == "Local":
-        ib_coord_gmat = coord_system
+    ib1_burn_time_str = ib1.get("Tiempo burn", "").strip()
+    t_burn1 = None
+    if has_burn1 and ib1_burn_time_str != "":
+        t_burn1 = to_float(ib1_burn_time_str, 0.0)
+        # Acotamos entre 0 y dur_days
+        if t_burn1 < 0.0:
+            t_burn1 = 0.0
+        if t_burn1 > dur_days:
+            t_burn1 = dur_days
+
+    if ib1_coord_raw == "Local":
+        ib1_coord_gmat = coord_system
     else:
-        # La GUI ya usa nombres tipo EarthMJ2000Eq, EarthFixed, etc.
-        ib_coord_gmat = ib_coord_raw
+        ib1_coord_gmat = ib1_coord_raw
 
-    ib_origin_en = map_body(ib_origin_es)
+    ib1_origin_en = map_body(ib1_origin_es)
 
-    # ========== CONSTRUIR SCRIPT ==========
+    # ========== IMPULSIVE BURN 2 ==========
+    ib2_coord_raw = ib2.get("Sistema de coordenadas", "Local").strip()
+    ib2_origin_es = ib2.get("Origen", central_es)
+    ib2_axes      = ib2.get("Axes", "VNB").strip()
+
+    dv2_1 = to_float(ib2.get("Delta V Element 1", "0"), 0.0)
+    dv2_2 = to_float(ib2.get("Delta V Element 2", "0"), 0.0)
+    dv2_3 = to_float(ib2.get("Delta V Element 3", "0"), 0.0)
+
+    has_burn2 = (abs(dv2_1) + abs(dv2_2) + abs(dv2_3)) > 0.0
+
+    ib2_burn_time_str = ib2.get("Tiempo burn", "").strip()
+    t_burn2 = None
+    if has_burn2 and ib2_burn_time_str != "":
+        t_burn2 = to_float(ib2_burn_time_str, 0.0)
+        if t_burn2 < 0.0:
+            t_burn2 = 0.0
+        if t_burn2 > dur_days:
+            t_burn2 = dur_days
+
+    if ib2_coord_raw == "Local":
+        ib2_coord_gmat = coord_system
+    else:
+        ib2_coord_gmat = ib2_coord_raw
+
+    ib2_origin_en = map_body(ib2_origin_es)
+
+
+        # ========== CONSTRUIR SCRIPT ==========
     lines = []
 
-    # Objetos básicos
+    # --- CoordinateSystem SOLO si NO es la Tierra ---
+    if central_en != "Earth":
+        lines.append(f"Create CoordinateSystem {coord_system};")
+        lines.append(f"{coord_system}.Origin = {central_en};")
+        lines.append(f"{coord_system}.Axes   = {axes_type};")
+        lines.append("")  # estética
+
+
+
+    # Objetos
     lines.append(f"Create Spacecraft {sat_name};")
     lines.append("Create ForceModel FM;")
     lines.append("Create Propagator Prop;")
-    if has_burn:
-        lines.append("Create ImpulsiveBurn ImpBurn;")
+    if has_burn1:
+        lines.append("Create ImpulsiveBurn ImpBurn1;")
+    if has_burn2:
+        lines.append("Create ImpulsiveBurn ImpBurn2;")
     lines.append("Create ReportFile DefaultReportFile;")
     lines.append("")
+    
 
-    # --- Spacecraft ---
+    # Spacecraft
     lines.append(f"{sat_name}.DateFormat = {date_format};")
     lines.append(f"{sat_name}.Epoch = '{epoch_str}';")
     lines.append(f"{sat_name}.CoordinateSystem = {coord_system};")
@@ -377,42 +425,50 @@ def build_gmat_script(cfg: dict, script_path: Path):
 
     lines.append("")
 
-    # --- ForceModel (simple) ---
+    # ForceModel
     lines.append(f"FM.CentralBody   = {fm_central_en};")
     lines.append(f"FM.PrimaryBodies = {{{fm_central_en}}};")
     lines.append("FM.Drag = None;")
     lines.append("FM.SRP  = Off;")
     lines.append("")
 
-    # --- Propagator ---
+    # Propagator
     lines.append(f"Prop.Type            = {integ_type};")
     lines.append("Prop.FM              = FM;")
     lines.append(f"Prop.InitialStepSize = {init_step};")
     lines.append(f"Prop.Accuracy        = {accuracy};")
     lines.append(f"Prop.MinStep         = {min_step};")
-    lines.append(f"Prop.MaxStep         = {max_step};")
+    lines.append(f"Prop.MaxStep         = {max_step};");
     lines.append(f"Prop.MaxStepAttempts = {max_step_attempts};")
     lines.append("")
 
-    # --- ImpulsiveBurn (si hay ΔV) ---
-    if has_burn:
-        lines.append(f"ImpBurn.CoordinateSystem = {ib_coord_gmat};")
-        lines.append(f"ImpBurn.Origin          = {ib_origin_en};")
-        lines.append(f"ImpBurn.Axes            = {ib_axes};")
-        lines.append(f"ImpBurn.Element1        = {dv1};")
-        lines.append(f"ImpBurn.Element2        = {dv2};")
-        lines.append(f"ImpBurn.Element3        = {dv3};")
-        # Para no complicarnos con tanques:
-        lines.append("ImpBurn.DecrementMass   = false;")
+    # ImpulsiveBurn 1
+    if has_burn1:
+        lines.append(f"ImpBurn1.CoordinateSystem = {ib1_coord_gmat};")
+        lines.append(f"ImpBurn1.Origin          = {ib1_origin_en};")
+        lines.append(f"ImpBurn1.Axes            = {ib1_axes};")
+        lines.append(f"ImpBurn1.Element1        = {dv1_1};")
+        lines.append(f"ImpBurn1.Element2        = {dv1_2};")
+        lines.append(f"ImpBurn1.Element3        = {dv1_3};")
+        lines.append("ImpBurn1.DecrementMass   = false;")
         lines.append("")
 
-       # --- ReportFile (RUTA RELATIVA, PORTABLE) ---
+    # ImpulsiveBurn 2
+    if has_burn2:
+        lines.append(f"ImpBurn2.CoordinateSystem = {ib2_coord_gmat};")
+        lines.append(f"ImpBurn2.Origin          = {ib2_origin_en};")
+        lines.append(f"ImpBurn2.Axes            = {ib2_axes};")
+        lines.append(f"ImpBurn2.Element1        = {dv2_1};")
+        lines.append(f"ImpBurn2.Element2        = {dv2_2};")
+        lines.append(f"ImpBurn2.Element3        = {dv2_3};")
+        lines.append("ImpBurn2.DecrementMass   = false;")
+        lines.append("")
 
+    # ReportFile
+    BASE_PROJECT_DIR = BASE_DIR
+    GMAT_OUTPUT_DIR = BASE_PROJECT_DIR / "GMAT_output"
     GMAT_OUTPUT_DIR.mkdir(exist_ok=True)
     report_path = GMAT_OUTPUT_DIR / "DefaultReportFile.txt"
-
-
-    # GMAT 2019 acepta perfectamente rutas con '/'
     report_path_str = report_path.as_posix()
 
     lines.append(f"DefaultReportFile.Filename = '{report_path_str}';")
@@ -425,31 +481,55 @@ def build_gmat_script(cfg: dict, script_path: Path):
     )
     lines.append("")
 
-
-
-
-    # --- Mission Sequence ---
+    # ========== MISSION SEQUENCE ==========
     lines.append("BeginMissionSequence;")
-    lines.append(
-        f"Report DefaultReportFile "
+
+    report_fields = (
         f"{sat_name}.ElapsedDays {sat_name}.X {sat_name}.Y {sat_name}.Z "
-        f"{sat_name}.VX {sat_name}.VY {sat_name}.VZ;"
+        f"{sat_name}.VX {sat_name}.VY {sat_name}.VZ"
     )
 
-    # Aplicamos el burn justo al principio, antes de propagar
-    if has_burn:
-        lines.append(f"Maneuver ImpBurn({sat_name});")
+    # Report inicial
+    lines.append(f"Report DefaultReportFile {report_fields};")
 
-    lines.append(
-        f"Propagate Prop({sat_name}) "
-        f"{{{sat_name}.ElapsedDays = {dur_days}}};"
-    )
+    # Construimos lista de eventos (nombre del burn, tiempo)
+    events = []
+    if has_burn1 and t_burn1 is not None:
+        events.append(("ImpBurn1", t_burn1))
+    if has_burn2 and t_burn2 is not None:
+        events.append(("ImpBurn2", t_burn2))
 
-    lines.append(
-        f"Report DefaultReportFile "
-        f"{sat_name}.ElapsedDays {sat_name}.X {sat_name}.Y {sat_name}.Z "
-        f"{sat_name}.VX {sat_name}.VY {sat_name}.VZ;"
-    )
+    current_t = 0.0
+
+    # Ordenar por tiempo
+    events.sort(key=lambda e: e[1])
+
+    for burn_name, t in events:
+        if dur_days <= 0.0:
+            break
+
+        t_clamped = max(0.0, min(dur_days, t))
+
+        if t_clamped > current_t:
+            lines.append(
+                f"Propagate Prop({sat_name}) "
+                f"{{{sat_name}.ElapsedDays = {t_clamped}}};"
+            )
+            lines.append(f"Report DefaultReportFile {report_fields};")
+
+        lines.append(f"Maneuver {burn_name}({sat_name});")
+        lines.append(f"Report DefaultReportFile {report_fields};")
+
+        current_t = t_clamped
+
+    # Propagación final
+    if dur_days > current_t:
+        lines.append(
+            f"Propagate Prop({sat_name}) "
+            f"{{{sat_name}.ElapsedDays = {dur_days}}};"
+        )
+        lines.append(f"Report DefaultReportFile {report_fields};")
+
     lines.append("")
 
     script_text = "\n".join(lines)
@@ -460,12 +540,14 @@ def build_gmat_script(cfg: dict, script_path: Path):
     print("-----------------------------------------")
     print(script_text[:400] + "...\n")
 
+
 def find_gmat():
     posibles = [
         Path(r"C:\Program Files\GMAT\bin\GmatConsole.exe"),
         Path(r"C:\Program Files (x86)\GMAT\bin\GmatConsole.exe"),
         Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"),
-        Path(r"C:\Users\belen\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
+        Path(r"C:\Users\belen\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"),
+        Path(r"C:\Users\titan\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
     ]
 
     for p in posibles:
