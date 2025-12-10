@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 import subprocess
 import sys
 
@@ -12,10 +13,15 @@ def get_base_dir():
         return Path(__file__).resolve().parent.parent
 
 
-BASE_DIR = get_base_dir()
-DATA_FILE = BASE_DIR / "Datos" / "datos_guardados.txt"
+BASE_DIR   = get_base_dir()
+DATA_FILE  = BASE_DIR / "Datos" / "datos_guardados.txt"
 SCRIPT_PATH = BASE_DIR / "Transpiler_output" / "demo.script"
+GMAT_OUTPUT_DIR = BASE_DIR / "GMAT_output"
 
+
+# BASE_DIR = get_base_dir()
+# DATA_FILE = BASE_DIR / "Datos" / "datos_guardados.txt"
+# SCRIPT_PATH = BASE_DIR / "Transpiler_output" / "demo.script"
 
 
 def map_body(spanish_name: str) -> str:
@@ -200,38 +206,76 @@ def build_gmat_script(cfg: dict, script_path: Path):
     date_format = map_time_format(time_fmt)
 
     # ========== TIEMPO ==========
-    epoch_str_raw = tm.get("Fecha inicio", "").strip()
+    # ========== TIEMPO ==========
+
+    start_raw = tm.get("Fecha inicio", "").strip()
+    end_raw   = tm.get("Fecha final", "").strip()
 
     def normalize_epoch(epoch: str) -> str:
-        if "/" in epoch:
-            parts = epoch.split()
-            date_part = parts[0]
-            time_part = parts[1] if len(parts) > 1 else "12:00:00"
+        """
+        Convierte lo que viene de la GUI en un string tipo:
+        '08 Dec 2024 12:00:00.000'
+        Soporta:
+        - '08 Dec 2024'
+        - '08/12/2024'
+        - '08 Dec 2024 10:30:00'
+        - '08/12/2024 10:30:00'
+        Si falla, devuelve una fecha por defecto.
+        """
+        s = epoch.strip()
+        if not s:
+            return "01 Jan 2030 12:00:00.000"
 
-            d, m, y = date_part.split("/")
-            months = {
-                "01": "Jan", "02": "Feb", "03": "Mar", "04": "Apr",
-                "05": "May", "06": "Jun", "07": "Jul", "08": "Aug",
-                "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"
-            }
+        # Caso con hora incluida
+        if ":" in s:
+            # primero intentamos dd/mmm/YYYY HH:MM:SS
+            for fmt in ("%d %b %Y %H:%M:%S", "%d/%m/%Y %H:%M:%S"):
+                try:
+                    dt = datetime.strptime(s, fmt)
+                    return dt.strftime("%d %b %Y %H:%M:%S.000")
+                except ValueError:
+                    pass
+            # Si no hemos podido parsear, como mínimo añadimos .000
+            if not s.endswith(".000"):
+                return s + ".000"
+            return s
 
-            return f"{d} {months[m]} {y} {time_part}.000"
+        # Caso solo fecha: probamos dos formatos
+        for fmt in ("%d %b %Y", "%d/%m/%Y"):
+            try:
+                dt = datetime.strptime(s, fmt)
+                return dt.strftime("%d %b %Y 12:00:00.000")
+            except ValueError:
+                pass
 
-        if ":" in epoch:
-            if not epoch.endswith(".000"):
-                return epoch + ".000"
-            return epoch
-
+        # Si todo falla:
         return "01 Jan 2030 12:00:00.000"
 
-    epoch_str = normalize_epoch(epoch_str_raw)
+    def parse_date_only(s: str):
+        """Devuelve un datetime sin hora a partir de '08 Dec 2024' o '08/12/2024'."""
+        s = s.strip()
+        if not s:
+            return None
+        for fmt in ("%d %b %Y", "%d/%m/%Y"):
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                pass
+        return None
 
+    # Epoch = fecha de inicio normalizada
+    epoch_str = normalize_epoch(start_raw)
 
-    paso_str = tm.get("Paso temporal", "").strip()
-    if paso_str == "":
-        dur_days = 1.0
+    # Duración = (Fecha final - Fecha inicio) en días, si se puede
+    start_dt = parse_date_only(start_raw)
+    end_dt   = parse_date_only(end_raw)
+
+    if start_dt and end_dt and end_dt > start_dt:
+        dur_days = (end_dt - start_dt).total_seconds() / 86400.0
     else:
-        dur_days = to_float(paso_str, default=1.0)
+        # Si algo falla, por defecto 1 día
+        dur_days = 1.0
+
 
     # ========== SPACECRAFT ==========
     coord_type = sc.get("Sistema de coordenadas", "Cartesianas").strip()
@@ -255,10 +299,15 @@ def build_gmat_script(cfg: dict, script_path: Path):
     # ========== PROPAGATE (desde GUI) ==========
     integ_type = pr.get("Tipo de integrador", "RungeKutta89").strip() or "RungeKutta89"
 
-    init_step = positive_or_default(pr.get("Tamano de paso inicial", "60"),   60.0)
-    accuracy  = positive_or_default(pr.get("Precision (accuracy)", "1e-6"),   1e-6)
-    min_step  = positive_or_default(pr.get("Paso minimo", "0.1"),             0.1)
-    max_step  = positive_or_default(pr.get("Paso maximo", "600"),             600.0)
+    # init_step = positive_or_default(pr.get("Tamano de paso inicial", "60"),   60.0)
+    # accuracy  = positive_or_default(pr.get("Precision (accuracy)", "1e-6"),   1e-6)
+    # min_step  = positive_or_default(pr.get("Paso minimo", "0.1"),             0.1)
+    # max_step  = positive_or_default(pr.get("Paso maximo", "600"),             600.0)
+    init_step = positive_or_default(pr.get("Tamano de paso inicial", "10"),   10.0)
+    accuracy  = positive_or_default(pr.get("Precision (accuracy)", "1e-4"),   1e-4)
+    min_step  = positive_or_default(pr.get("Paso minimo", "0.01"),            0.01)
+    max_step  = positive_or_default(pr.get("Paso maximo", "300"),             300.0)
+
 
     max_step_attempts_str = pr.get("Intentos max. paso", "50")
     try:
@@ -357,15 +406,11 @@ def build_gmat_script(cfg: dict, script_path: Path):
         lines.append("ImpBurn.DecrementMass   = false;")
         lines.append("")
 
-    # --- ReportFile (RUTA RELATIVA, PORTABLE) ---
+       # --- ReportFile (RUTA RELATIVA, PORTABLE) ---
 
-    # script_path = AM1_MILESTONE_7/Transpiler_output/demo.script
-    BASE_PROJECT_DIR = BASE_DIR
+    GMAT_OUTPUT_DIR.mkdir(exist_ok=True)
+    report_path = GMAT_OUTPUT_DIR / "DefaultReportFile.txt"
 
-    OUTPUT_DIR = BASE_PROJECT_DIR / "GMAT_output"
-    OUTPUT_DIR.mkdir(exist_ok=True)
-
-    report_path = OUTPUT_DIR / "DefaultReportFile.txt"
 
     # GMAT 2019 acepta perfectamente rutas con '/'
     report_path_str = report_path.as_posix()
@@ -375,7 +420,8 @@ def build_gmat_script(cfg: dict, script_path: Path):
     lines.append("DefaultReportFile.Precision = 16;")
     lines.append(
         f"DefaultReportFile.Add = "
-        f"{{{sat_name}.ElapsedDays, {sat_name}.X, {sat_name}.Y, {sat_name}.Z}};"
+        f"{{{sat_name}.ElapsedDays, {sat_name}.X, {sat_name}.Y, {sat_name}.Z, "
+        f"{sat_name}.VX, {sat_name}.VY, {sat_name}.VZ}};"
     )
     lines.append("")
 
@@ -386,7 +432,8 @@ def build_gmat_script(cfg: dict, script_path: Path):
     lines.append("BeginMissionSequence;")
     lines.append(
         f"Report DefaultReportFile "
-        f"{sat_name}.ElapsedDays {sat_name}.X {sat_name}.Y {sat_name}.Z;"
+        f"{sat_name}.ElapsedDays {sat_name}.X {sat_name}.Y {sat_name}.Z "
+        f"{sat_name}.VX {sat_name}.VY {sat_name}.VZ;"
     )
 
     # Aplicamos el burn justo al principio, antes de propagar
@@ -397,9 +444,11 @@ def build_gmat_script(cfg: dict, script_path: Path):
         f"Propagate Prop({sat_name}) "
         f"{{{sat_name}.ElapsedDays = {dur_days}}};"
     )
+
     lines.append(
         f"Report DefaultReportFile "
-        f"{sat_name}.ElapsedDays {sat_name}.X {sat_name}.Y {sat_name}.Z;"
+        f"{sat_name}.ElapsedDays {sat_name}.X {sat_name}.Y {sat_name}.Z "
+        f"{sat_name}.VX {sat_name}.VY {sat_name}.VZ;"
     )
     lines.append("")
 
@@ -411,39 +460,12 @@ def build_gmat_script(cfg: dict, script_path: Path):
     print("-----------------------------------------")
     print(script_text[:400] + "...\n")
 
-
-
-if __name__ == "__main__":
-    cfg = parse_gui_txt(DATA_FILE)
-
-    # Solo para comprobar por pantalla 
-    print("=== GENERAL ===")
-    for k, v in cfg["general"].items():
-        print(f"{k} -> {v}")
-
-    print("\n=== SPACECRAFT ===")
-    for k, v in cfg["spacecraft"].items():
-        print(f"{k} -> {v}")
-
-    print("\n=== TIEMPO ===")
-    for k, v in cfg["time"].items():
-        print(f"{k} -> {v}")
-
-    # Y ahora generamos el script
-    build_gmat_script(cfg, SCRIPT_PATH)
-
-
-#### Ejecutar GMAT en modo consola ####
-# ================================
-# DETECCIÓN AUTOMÁTICA DE GMAT
-# ================================
-
-
 def find_gmat():
     posibles = [
         Path(r"C:\Program Files\GMAT\bin\GmatConsole.exe"),
         Path(r"C:\Program Files (x86)\GMAT\bin\GmatConsole.exe"),
-        Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
+        Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"),
+        Path(r"C:\Users\belen\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
     ]
 
     for p in posibles:
@@ -453,17 +475,40 @@ def find_gmat():
     raise FileNotFoundError("❌ GMAT no está instalado o no se encontró GmatConsole.exe")
 
 
-# ================================
-# EJECUCIÓN DE GMAT
-# ================================
+def run_gmat(script_path: Path):
+    gmat_console = find_gmat()
+    print("Lanzando GMAT en modo consola...")
+    print("Executable:", gmat_console)
+    print("Script:    ", script_path)
+
+    subprocess.run([gmat_console, str(script_path)], check=True)
+    print("✅ GMAT ha terminado la ejecución correctamente.")
 
 
 def run_transpiler():
-    # Asegurar carpetas
+    # Asegurar carpetas dentro de Standalone
     (BASE_DIR / "Transpiler_output").mkdir(exist_ok=True)
     (BASE_DIR / "GMAT_output").mkdir(exist_ok=True)
+
 
     cfg = parse_gui_txt(DATA_FILE)
     build_gmat_script(cfg, SCRIPT_PATH)
 
 
+if __name__ == "__main__":
+    print("BASE_DIR   =", BASE_DIR)
+    print("DATA_FILE  =", DATA_FILE)
+    print("SCRIPT_PATH =", SCRIPT_PATH)
+
+    # 1) Generar el script de GMAT
+    run_transpiler()
+
+    # 2) Ejecutar GMAT con ese script
+    try:
+        run_gmat(SCRIPT_PATH)
+    except FileNotFoundError as e:
+        print(e)
+        print("Instala GMAT o corrige la ruta en find_gmat().")
+    except subprocess.CalledProcessError as e:
+        print("❌ Error al ejecutar GMAT")
+        print(e)

@@ -6,9 +6,7 @@ from PySide6.QtCore import Qt
 from pathlib import Path
 import sys
 import subprocess
-from Transpiler.Transpiler import run_transpiler
-from Plots import plot_results
-
+import importlib.util
 
 def get_base_dir():
     if getattr(sys, 'frozen', False):
@@ -17,6 +15,21 @@ def get_base_dir():
     else:
         # Estamos en modo .py normal (subimos desde GUI/)
         return Path(__file__).resolve().parent.parent
+
+
+
+# ==============================
+# IMPORT SEGURO DEL TRANSPILER
+# ==============================
+from Transpiler.Transpiler import run_transpiler
+
+
+# ==============================
+# IMPORT SEGURO DE PLOTS
+# ==============================
+
+from Plots import plot_results
+
 
 
 
@@ -93,7 +106,7 @@ class MainWindow(QWidget):
 
         # Integrador
         self.tipo_integrador = QComboBox()
-        self.tipo_integrador.addItems(["RungeKutta89", "PrinceDormand78"])
+        self.tipo_integrador.addItems(["RungeKutta89", "PrinceDormand78", "PrinceDormand45", "RungeKutta68", "RungeKutta56", "AdamsBashforthMoulton", "SPK", "Code500", "STK", "CCSDS-OEM", "PrinceDormand853", "RungeKutta4", "SPICESGP4"])
         self.initial_step_size = QLineEdit()
         self.accuracy = QLineEdit()
         self.min_step_size = QLineEdit()
@@ -273,6 +286,16 @@ class MainWindow(QWidget):
     # FUNCIÓN PARA GUARDAR DATOS EN UN TXT
     # ==========================================================
     def guardar_datos(self): # Recopila los datos de todas las pestañas y los guarda en un archivo TXT
+        
+        try:
+            base_dir = get_base_dir()
+            debug_log = base_dir / "debug_gui.txt"
+            with open(debug_log, "w", encoding="utf-8") as f:
+                f.write("✅ He entrado en guardar_datos()\n")
+                f.write(f"BASE_DIR = {base_dir}\n")
+        except Exception:
+            pass
+
 
         datos = []
 
@@ -362,12 +385,21 @@ class MainWindow(QWidget):
         # ================================
         # EJECUTAR TRANSPILER AUTOMÁTICAMENTE
         # ================================
-
-        transpiler_path = base_dir.parent / "Transpiler" / "Transpiler.py"
+        # Asegurar carpetas de trabajo del standalone
+        (base_dir / "Transpiler_output").mkdir(exist_ok=True)
+        (base_dir / "GMAT_output").mkdir(exist_ok=True)
 
         print("Lanzando Transpiler...")
-        run_transpiler()
-        print("✅ Transpiler ejecutado correctamente.")
+        try:
+            run_transpiler()
+            ok_log = base_dir / "ok_transpiler.txt"
+            with open(ok_log, "w", encoding="utf-8") as f:
+                f.write("✅ Transpiler ejecutado correctamente\n")
+        except Exception as e:
+            err_log = base_dir / "error_transpiler.txt"
+            with open(err_log, "w", encoding="utf-8") as f:
+                f.write(str(e))
+
         # ================================
         # LANZAR GMAT DESPUÉS DEL TRANSPILER
         # ================================

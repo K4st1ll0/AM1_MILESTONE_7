@@ -5,7 +5,7 @@ a = Analysis(
     ['GUI\\GUI.py'],
     pathex=[],
     binaries=[],
-    datas=[('Datos', 'Datos'), ('Transpiler', 'Transpiler'), ('Transpiler_output', 'Transpiler_output'), ('GMAT_output', 'GMAT_output'), ('Plots', 'Plots')],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

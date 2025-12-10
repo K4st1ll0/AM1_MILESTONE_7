@@ -2,13 +2,20 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # Necesario para 3D
+from mpl_toolkits.mplot3d import Axes3D
+import sys
 
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).resolve().parent
+    else:
+        return Path(__file__).resolve().parent.parent
 
-# === RUTAS ===
-STANDALONE_DIR = Path(__file__).resolve().parent.parent 
-GMAT_OUTPUT_DIR = STANDALONE_DIR / "GMAT_output"
-PLOTS_DIR = STANDALONE_DIR / "Plots"
+BASE_DIR = get_base_dir()
+
+GMAT_OUTPUT_DIR = BASE_DIR / "GMAT_output"
+PLOTS_DIR = BASE_DIR / "Plots"
+
 
 REPORT_PATH = GMAT_OUTPUT_DIR / "DefaultReportFile.txt"
 
@@ -106,17 +113,6 @@ def make_plots(df: pd.DataFrame):
 
     print("✅ Gráficas guardadas en:", PLOTS_DIR)
 
-from pathlib import Path
-import sys
-
-def get_base_dir():
-    if getattr(sys, 'frozen', False):
-        return Path(sys.executable).resolve().parent
-    else:
-        return Path(__file__).resolve().parent.parent
-
-BASE_DIR = get_base_dir()
-REPORT_PATH = BASE_DIR / "GMAT_output" / "DefaultReportFile.txt"
 
 
 

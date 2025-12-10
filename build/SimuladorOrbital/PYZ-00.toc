@@ -304,7 +304,10 @@
    'C:\\Users\\Pablo '
    'Castillo\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\PIL\\features.py',
    'PYMODULE'),
-  ('Plots', '-', 'PYMODULE'),
+  ('Plots',
+   'C:\\Users\\Pablo '
+   'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\Plots\\__init__.py',
+   'PYMODULE'),
   ('Plots.plot_results',
    'C:\\Users\\Pablo '
    'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\Plots\\plot_results.py',
@@ -321,7 +324,10 @@
    'C:\\Users\\Pablo '
    'Castillo\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\PySide6\\support\\deprecated.py',
    'PYMODULE'),
-  ('Transpiler', '-', 'PYMODULE'),
+  ('Transpiler',
+   'C:\\Users\\Pablo '
+   'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\Transpiler\\__init__.py',
+   'PYMODULE'),
   ('Transpiler.Transpiler',
    'C:\\Users\\Pablo '
    'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\Transpiler\\Transpiler.py',
