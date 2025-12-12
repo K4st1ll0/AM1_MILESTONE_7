@@ -4,20 +4,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  
 import sys
+from SOURCES.utils import INPUT_DIR, OUTPUT_DIR, PLOTS_DIR
 
-def get_base_dir():
-    if getattr(sys, 'frozen', False):
-        return Path(sys.executable).resolve().parent
-    else:
-        return Path(__file__).resolve().parent.parent
-
-BASE_DIR = get_base_dir()
-
-GMAT_OUTPUT_DIR = BASE_DIR / "GMAT_output"
-PLOTS_DIR = BASE_DIR / "Plots"
-DATOS_PATH = BASE_DIR / "Datos" / "datos_guardados.txt"
-
-REPORT_PATH = GMAT_OUTPUT_DIR / "DefaultReportFile.txt"
+DATOS_PATH  = INPUT_DIR / "datos_guardados.txt"
+REPORT_PATH = OUTPUT_DIR / "DefaultReportFile.txt"
 
 
 def load_report(path: Path) -> pd.DataFrame:
@@ -174,10 +164,4 @@ def make_plots(df: pd.DataFrame):
     print("✅ Gráficas guardadas en:", PLOTS_DIR)
 
 
-
-if __name__ == "__main__":
-    print("Leyendo report de:", REPORT_PATH)
-    df = load_report(REPORT_PATH)
-    print("Columnas leídas:", df.columns.tolist())
-    make_plots(df)
 

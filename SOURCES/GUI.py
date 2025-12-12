@@ -2,38 +2,16 @@ from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QComboBox,
     QTabWidget, QVBoxLayout, QFormLayout, QPushButton, QListWidget, QAbstractItemView
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Signal
 from pathlib import Path
 import sys
-import subprocess
-import importlib.util
-
-def get_base_dir():
-    if getattr(sys, 'frozen', False):
-        # Estamos en el .exe
-        return Path(sys.executable).resolve().parent
-    else:
-        # Estamos en modo .py normal (subimos desde GUI/)
-        return Path(__file__).resolve().parent.parent
-
-
-
-# ==============================
-# IMPORT SEGURO DEL TRANSPILER
-# ==============================
-from Transpiler.Transpiler import run_transpiler
-
-
-# ==============================
-# IMPORT SEGURO DE PLOTS
-# ==============================
-
-from Plots import plot_results
-
+from SOURCES.utils import INPUT_DIR
 
 
 
 class MainWindow(QWidget):
+    datos_guardados = Signal()
+
     def __init__(self):
         super().__init__()
 
@@ -237,13 +215,15 @@ class MainWindow(QWidget):
         # ==========================================================
         # --- BOTÓN GUARDAR DATOS ---
         # ==========================================================
-        # Añadir pestañas y generar datos
+        # Añadir pestañas y generar datoss
         self.btn_guardar = QPushButton("Guardar datos en TXT")
         self.btn_guardar.clicked.connect(self.guardar_datos)
 
         layout.addWidget(tabs)
         layout.addWidget(self.btn_guardar)
         self.setLayout(layout)
+
+        
 
     def actualizar_formato_tiempo(self):
         self.fecha_inicio.clear()
@@ -322,15 +302,6 @@ class MainWindow(QWidget):
     # FUNCIÓN PARA GUARDAR DATOS EN UN TXT
     # ==========================================================
     def guardar_datos(self): # Recopila los datos de todas las pestañas y los guarda en un archivo TXT
-        
-        try:
-            base_dir = get_base_dir()
-            debug_log = base_dir / "debug_gui.txt"
-            with open(debug_log, "w", encoding="utf-8") as f:
-                f.write("✅ He entrado en guardar_datos()\n")
-                f.write(f"BASE_DIR = {base_dir}\n")
-        except Exception:
-            pass
 
 
         datos = []
@@ -408,7 +379,6 @@ class MainWindow(QWidget):
         datos.append(f"Tiempo burn: {self.burn_time2.text()}")
 
         # --- REPORTFILE ---
-        # --- REPORTFILE ---
         datos.append("\n=== REPORTFILE ===")
         datos.append("Nombre del archivo de reporte: ReportFile")
 
@@ -416,114 +386,14 @@ class MainWindow(QWidget):
         # --- GUARDAR ---
 
         # Base portable (vale para .py y .exe)
-        base_dir = get_base_dir()
-        ruta = base_dir / "Datos" / "datos_guardados.txt"
-
-        # Asegurar que la carpeta exista
-        ruta.parent.mkdir(exist_ok=True)
+        ruta = INPUT_DIR / "datos_guardados.txt"
+        ruta.parent.mkdir(parents=True, exist_ok=True)
 
 
         with open(ruta, "w", encoding="utf-8") as f:
             f.write("\n".join(datos))
 
         print(f"Archivo guardado en: {ruta}")
+        self.datos_guardados.emit()
 
-        # ================================
-        # EJECUTAR TRANSPILER AUTOMÁTICAMENTE
-        # ================================
-        # Asegurar carpetas de trabajo del standalone
-        (base_dir / "Transpiler_output").mkdir(exist_ok=True)
-        (base_dir / "GMAT_output").mkdir(exist_ok=True)
-
-        print("Lanzando Transpiler...")
-        try:
-            run_transpiler()
-            ok_log = base_dir / "ok_transpiler.txt"
-            with open(ok_log, "w", encoding="utf-8") as f:
-                f.write("✅ Transpiler ejecutado correctamente\n")
-        except Exception as e:
-            err_log = base_dir / "error_transpiler.txt"
-            with open(err_log, "w", encoding="utf-8") as f:
-                f.write(str(e))
-
-        # ================================
-        # LANZAR GMAT DESPUÉS DEL TRANSPILER
-        # ================================
-
-        def find_gmat():
-            posibles = [
-                Path(r"C:\Program Files\GMAT\bin\GmatConsole.exe"),
-                Path(r"C:\Program Files (x86)\GMAT\bin\GmatConsole.exe"),
-                Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"),
-                Path(r"C:\Users\titan\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
-            ]
-
-            for p in posibles:
-                if p.exists():
-                    return str(p)
-
-            raise FileNotFoundError("GMAT no está instalado o no se encontró GmatConsole.exe")
-
-
-        try:
-            gmat_console = find_gmat()
-            script_path = base_dir / "Transpiler_output" / "demo.script"
-
-            if not script_path.exists():
-                raise FileNotFoundError(f"No existe el script: {script_path}")
-
-            print("Lanzando GMAT desde la GUI...")
-
-            subprocess.run(
-                [gmat_console, str(script_path)],
-                cwd=str(base_dir),      # ✅ ESTO ES LA CLAVE
-                check=True
-            )
-
-            print("✅ GMAT ejecutado correctamente.")
-
-        except Exception as e:
-            # Como estás en --noconsole, guardamos el error en un log
-            error_log = base_dir / "error_gmat.txt"
-            with open(error_log, "w", encoding="utf-8") as f:
-                f.write(str(e))
-
-            print("❌ Error al ejecutar GMAT. Ver error_gmat.txt")
-
-        # ================================
-        # EJECUTAR SCRIPT DE PLOTS
-        # ================================
-
-        # ================================
-        # EJECUTAR SCRIPT DE PLOTS (MODO CORRECTO EN EXE)
-        # ================================
-
-        try:
-            print("Generando gráficas automáticamente...")
-
-            BASE_DIR = get_base_dir()
-            REPORT_PATH = BASE_DIR / "GMAT_output" / "DefaultReportFile.txt"
-
-            df = plot_results.load_report(REPORT_PATH)
-            plot_results.make_plots(df)
-
-            print("✅ Gráficas generadas correctamente en la carpeta Plots.")
-
-        except Exception as e:
-            error_plot = BASE_DIR / "error_plots.txt"
-            with open(error_plot, "w", encoding="utf-8") as f:
-                f.write(str(e))
-
-            print("❌ Error generando gráficas. Ver error_plots.txt")
-
-
-
-
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.resize(600, 600)
-    window.show()
-    sys.exit(app.exec())
+        

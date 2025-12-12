@@ -2,27 +2,11 @@ from pathlib import Path
 from datetime import datetime
 import subprocess
 import sys
+from SOURCES.utils import INPUT_DIR, GMAT_DIR, OUTPUT_DIR
 
 
-def get_base_dir():
-    if getattr(sys, 'frozen', False):
-        # Estamos dentro del .exe
-        return Path(sys.executable).resolve().parent
-    else:
-        # Estamos en modo script normal
-        return Path(__file__).resolve().parent.parent
-
-
-BASE_DIR   = get_base_dir()
-DATA_FILE  = BASE_DIR / "Datos" / "datos_guardados.txt"
-SCRIPT_PATH = BASE_DIR / "Transpiler_output" / "demo.script"
-GMAT_OUTPUT_DIR = BASE_DIR / "GMAT_output"
-
-# BASE_DIR   = get_base_dir()
-# DATA_FILE  = BASE_DIR / "Standalone"/ "Datos" / "datos_guardados.txt"
-# SCRIPT_PATH = BASE_DIR / "Standalone"/ "Transpiler_output" / "demo.script"
-# GMAT_OUTPUT_DIR = BASE_DIR / "GMAT_output"
-
+DATA_FILE   = INPUT_DIR / "datos_guardados.txt"
+SCRIPT_PATH = GMAT_DIR / "demo.script"
 
 
 
@@ -465,13 +449,7 @@ def build_gmat_script(cfg: dict, script_path: Path):
         lines.append("")
 
     # ReportFile
-    BASE_PROJECT_DIR = BASE_DIR
-    GMAT_OUTPUT_DIR = BASE_PROJECT_DIR / "GMAT_output"
-    GMAT_OUTPUT_DIR.mkdir(exist_ok=True)
-    report_path = GMAT_OUTPUT_DIR / "DefaultReportFile.txt"
-    report_path_str = report_path.as_posix()
-
-    lines.append(f"DefaultReportFile.Filename = '{report_path_str}';")
+    lines.append("DefaultReportFile.Filename = 'DefaultReportFile.txt';")
     lines.append("DefaultReportFile.WriteHeaders = true;")
     lines.append("DefaultReportFile.Precision = 16;")
     lines.append(
@@ -480,6 +458,7 @@ def build_gmat_script(cfg: dict, script_path: Path):
         f"{sat_name}.VX, {sat_name}.VY, {sat_name}.VZ}};"
     )
     lines.append("")
+
 
     # ========== MISSION SEQUENCE ==========
     lines.append("BeginMissionSequence;")
@@ -541,56 +520,11 @@ def build_gmat_script(cfg: dict, script_path: Path):
     print(script_text[:400] + "...\n")
 
 
-def find_gmat():
-    posibles = [
-        Path(r"C:\Program Files\GMAT\bin\GmatConsole.exe"),
-        Path(r"C:\Program Files (x86)\GMAT\bin\GmatConsole.exe"),
-        Path(r"C:\Program Files (x86)\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"),
-        Path(r"C:\Users\belen\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe"),
-        Path(r"C:\Users\titan\Downloads\GMAT-R2019aBeta-Windows-x64-public\GMAT-R2019aBeta-Windows-x64-public\bin\GmatConsole.exe")
-    ]
-
-    for p in posibles:
-        if p.exists():
-            return str(p)
-
-    raise FileNotFoundError("❌ GMAT no está instalado o no se encontró GmatConsole.exe")
-
-
-def run_gmat(script_path: Path):
-    gmat_console = find_gmat()
-    print("Lanzando GMAT en modo consola...")
-    print("Executable:", gmat_console)
-    print("Script:    ", script_path)
-
-    subprocess.run([gmat_console, str(script_path)], check=True)
-    print("✅ GMAT ha terminado la ejecución correctamente.")
-
-
 def run_transpiler():
-    # Asegurar carpetas dentro de Standalone
-    (BASE_DIR / "Transpiler_output").mkdir(exist_ok=True)
-    (BASE_DIR / "GMAT_output").mkdir(exist_ok=True)
-
-
     cfg = parse_gui_txt(DATA_FILE)
     build_gmat_script(cfg, SCRIPT_PATH)
+    return SCRIPT_PATH
 
 
-if __name__ == "__main__":
-    print("BASE_DIR   =", BASE_DIR)
-    print("DATA_FILE  =", DATA_FILE)
-    print("SCRIPT_PATH =", SCRIPT_PATH)
 
-    # 1) Generar el script de GMAT
-    run_transpiler()
 
-    # 2) Ejecutar GMAT con ese script
-    try:
-        run_gmat(SCRIPT_PATH)
-    except FileNotFoundError as e:
-        print(e)
-        print("Instala GMAT o corrige la ruta en find_gmat().")
-    except subprocess.CalledProcessError as e:
-        print("❌ Error al ejecutar GMAT")
-        print(e)
