@@ -12,7 +12,5 @@ AUTORES:
 
 DIAGRAMA:
 
-## DIAGRAMA
-
 ![Diagrama de dependencias](docs/Main.svg)
 
