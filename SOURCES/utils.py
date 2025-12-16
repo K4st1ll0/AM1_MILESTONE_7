@@ -1,7 +1,16 @@
 # SOURCES/utils.py
 from pathlib import Path
+import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+def get_project_root():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    else:
+        return Path(__file__).resolve().parent.parent
+
+PROJECT_ROOT = get_project_root()
+
+
 
 SOURCES_DIR = PROJECT_ROOT / "SOURCES"
 DATA_DIR    = PROJECT_ROOT / "DATA"
