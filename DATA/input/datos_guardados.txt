@@ -1,6 +1,6 @@
 === GENERAL ===
-Nombre nave: 
-Cuerpo central: Tierra
+Nombre nave: qwd
+Cuerpo central: Luna
 Sistema de referencia: Ecliptico
 Formato de tiempo: UTC
 
@@ -22,7 +22,7 @@ Fecha final:
 
 === PROPAGATE ===
 Tipo de integrador: RungeKutta89
-Tamaño de paso inicial: 
+Tamano de paso inicial: 
 Precision (accuracy): 
 Paso minimo: 
 Paso maximo: 
