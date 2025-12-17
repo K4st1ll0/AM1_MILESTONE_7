@@ -191,12 +191,21 @@ def build_gmat_script(cfg: dict, script_path: Path):
     central_en   = map_body(central_es)
     sistema_ref  = gen.get("Sistema de referencia", "Ecuatorial")
     coord_system = map_coord_system(central_en, sistema_ref)
+    coord_prefix = f"{sat_name}.{coord_system}"
 
     # Ejes (ecuatorial vs eclíptica) en GMAT
-    if coord_system.endswith("MJ2000Ec"):
-        axes_type = "MJ2000Ec"   # eclíptica
+    s_ref = (sistema_ref or "").lower()
+
+    if "eclip" in s_ref:
+        # Si el usuario pide eclíptica -> MJ2000Ec
+        axes_type = "MJ2000Ec"
     else:
-        axes_type = "MJ2000Eq"   # ecuatorial por defecto
+        if central_en == "Earth":
+            # Tierra: el clásico EarthMJ2000Eq
+            axes_type = "MJ2000Eq"
+        else:
+            # Otros cuerpos: usamos BodyInertial, como en tu prueba con Luna_coord
+            axes_type = "BodyInertial"
 
 
     time_fmt    = gen.get("Formato de tiempo", "UTC")
@@ -453,19 +462,20 @@ def build_gmat_script(cfg: dict, script_path: Path):
     lines.append("DefaultReportFile.WriteHeaders = true;")
     lines.append("DefaultReportFile.Precision = 16;")
     lines.append(
-        f"DefaultReportFile.Add = "
-        f"{{{sat_name}.ElapsedDays, {sat_name}.X, {sat_name}.Y, {sat_name}.Z, "
-        f"{sat_name}.VX, {sat_name}.VY, {sat_name}.VZ}};"
+        "DefaultReportFile.Add = "
+        f"{{{sat_name}.ElapsedDays, "
+        f"{coord_prefix}.X, {coord_prefix}.Y, {coord_prefix}.Z, "
+        f"{coord_prefix}.VX, {coord_prefix}.VY, {coord_prefix}.VZ}};"
     )
     lines.append("")
 
-
-    # ========== MISSION SEQUENCE ==========
+    #========== MISSION SEQUENCE ==========
     lines.append("BeginMissionSequence;")
 
     report_fields = (
-        f"{sat_name}.ElapsedDays {sat_name}.X {sat_name}.Y {sat_name}.Z "
-        f"{sat_name}.VX {sat_name}.VY {sat_name}.VZ"
+        f"{sat_name}.ElapsedDays "
+        f"{coord_prefix}.X {coord_prefix}.Y {coord_prefix}.Z "
+        f"{coord_prefix}.VX {coord_prefix}.VY {coord_prefix}.VZ"
     )
 
     # Report inicial

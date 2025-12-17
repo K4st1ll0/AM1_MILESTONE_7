@@ -1,22 +1,18 @@
-Create CoordinateSystem LunaMJ2000Ec;
-LunaMJ2000Ec.Origin = Luna;
-LunaMJ2000Ec.Axes   = MJ2000Ec;
-
-Create Spacecraft qwd;
+Create Spacecraft MiNabo;
 Create ForceModel FM;
 Create Propagator Prop;
 Create ReportFile DefaultReportFile;
 
-qwd.DateFormat = UTCGregorian;
-qwd.Epoch = '01 Jan 2030 12:00:00.000';
-qwd.CoordinateSystem = LunaMJ2000Ec;
-qwd.DisplayStateType = Cartesian;
-qwd.X  = 7000.0;
-qwd.Y  = 0.0;
-qwd.Z  = 0.0;
-qwd.VX = 0.0;
-qwd.VY = 7.5;
-qwd.VZ = 0.0;
+MiNabo.DateFormat = UTCGregorian;
+MiNabo.Epoch = '01 Jan 2030 12:00:00.000';
+MiNabo.CoordinateSystem = EarthMJ2000Ec;
+MiNabo.DisplayStateType = Cartesian;
+MiNabo.X  = 7000.0;
+MiNabo.Y  = 0.0;
+MiNabo.Z  = 0.0;
+MiNabo.VX = 0.0;
+MiNabo.VY = 7.5;
+MiNabo.VZ = 0.0;
 
 FM.CentralBody   = Earth;
 FM.PrimaryBodies = {Earth};
@@ -34,9 +30,9 @@ Prop.MaxStepAttempts = 50;
 DefaultReportFile.Filename = 'DefaultReportFile.txt';
 DefaultReportFile.WriteHeaders = true;
 DefaultReportFile.Precision = 16;
-DefaultReportFile.Add = {qwd.ElapsedDays, qwd.X, qwd.Y, qwd.Z, qwd.VX, qwd.VY, qwd.VZ};
+DefaultReportFile.Add = {MiNabo.ElapsedDays, MiNabo.EarthMJ2000Ec.X, MiNabo.EarthMJ2000Ec.Y, MiNabo.EarthMJ2000Ec.Z, MiNabo.EarthMJ2000Ec.VX, MiNabo.EarthMJ2000Ec.VY, MiNabo.EarthMJ2000Ec.VZ};
 
 BeginMissionSequence;
-Report DefaultReportFile qwd.ElapsedDays qwd.X qwd.Y qwd.Z qwd.VX qwd.VY qwd.VZ;
-Propagate Prop(qwd) {qwd.ElapsedDays = 1.0};
-Report DefaultReportFile qwd.ElapsedDays qwd.X qwd.Y qwd.Z qwd.VX qwd.VY qwd.VZ;
+Report DefaultReportFile MiNabo.ElapsedDays MiNabo.EarthMJ2000Ec.X MiNabo.EarthMJ2000Ec.Y MiNabo.EarthMJ2000Ec.Z MiNabo.EarthMJ2000Ec.VX MiNabo.EarthMJ2000Ec.VY MiNabo.EarthMJ2000Ec.VZ;
+Propagate Prop(MiNabo) {MiNabo.ElapsedDays = 1.0};
+Report DefaultReportFile MiNabo.ElapsedDays MiNabo.EarthMJ2000Ec.X MiNabo.EarthMJ2000Ec.Y MiNabo.EarthMJ2000Ec.Z MiNabo.EarthMJ2000Ec.VX MiNabo.EarthMJ2000Ec.VY MiNabo.EarthMJ2000Ec.VZ;

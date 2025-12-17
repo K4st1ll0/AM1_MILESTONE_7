@@ -1,6 +1,6 @@
 === GENERAL ===
-Nombre nave: qwd
-Cuerpo central: Luna
+Nombre nave: MiNabo
+Cuerpo central: Tierra
 Sistema de referencia: Ecliptico
 Formato de tiempo: UTC
 
