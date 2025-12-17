@@ -5,7 +5,6 @@ import sys
 from SOURCES.GUI import MainWindow
 from SOURCES.Transpiler import run_transpiler
 from SOURCES.GMAT_exec import run_gmat
-from SOURCES.plot_results import load_report, make_plots
 from SOURCES.utils import ensure_dirs, OUTPUT_DIR
 
 
@@ -23,8 +22,7 @@ class PipelineWorker(QObject):
 
             print("▶ Generando plots...")
             report = OUTPUT_DIR / "DefaultReportFile.txt"
-            df = load_report(report)
-            make_plots(df)
+
 
             print("✅ Pipeline completo")
             self.finished.emit()

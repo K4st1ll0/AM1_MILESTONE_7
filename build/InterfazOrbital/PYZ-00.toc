@@ -332,10 +332,6 @@
    'C:\\Users\\Pablo '
    'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\SOURCES\\Transpiler.py',
    'PYMODULE'),
-  ('SOURCES.plot_results',
-   'C:\\Users\\Pablo '
-   'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\SOURCES\\plot_results.py',
-   'PYMODULE'),
   ('SOURCES.utils',
    'C:\\Users\\Pablo '
    'Castillo\\Desktop\\MUSE\\AM1\\AM1_MILESTONE_7\\SOURCES\\utils.py',
