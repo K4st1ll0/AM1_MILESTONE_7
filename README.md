@@ -14,3 +14,10 @@ DIAGRAMA:
 
 ![Diagrama de dependencias](docs/Main.svg)
 
+INSTRUCCIONES DE USO:
+
+         El programa se puede ejecutar por consola desde Main.py, o utilizando el ejecutable SimuladorOrbital.exe
+
+         
+
+
