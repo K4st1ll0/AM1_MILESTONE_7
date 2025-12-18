@@ -1,0 +1,38 @@
+Create Spacecraft Mi_Nave;
+Create ForceModel FM;
+Create Propagator Prop;
+Create ReportFile DefaultReportFile;
+
+Mi_Nave.DateFormat = UTCGregorian;
+Mi_Nave.Epoch = '01 Jan 2030 12:00:00.000';
+Mi_Nave.CoordinateSystem = EarthMJ2000Ec;
+Mi_Nave.DisplayStateType = Cartesian;
+Mi_Nave.X  = 7000.0;
+Mi_Nave.Y  = 0.0;
+Mi_Nave.Z  = 0.0;
+Mi_Nave.VX = 0.0;
+Mi_Nave.VY = 7.5;
+Mi_Nave.VZ = 0.0;
+
+FM.CentralBody   = Earth;
+FM.PrimaryBodies = {Earth};
+FM.Drag = None;
+FM.SRP  = Off;
+
+Prop.Type            = RungeKutta89;
+Prop.FM              = FM;
+Prop.InitialStepSize = 10.0;
+Prop.Accuracy        = 0.0001;
+Prop.MinStep         = 0.01;
+Prop.MaxStep         = 300.0;
+Prop.MaxStepAttempts = 50;
+
+DefaultReportFile.Filename = 'DefaultReportFile.txt';
+DefaultReportFile.WriteHeaders = true;
+DefaultReportFile.Precision = 16;
+DefaultReportFile.Add = {Mi_Nave.ElapsedDays, Mi_Nave.EarthMJ2000Ec.X, Mi_Nave.EarthMJ2000Ec.Y, Mi_Nave.EarthMJ2000Ec.Z, Mi_Nave.EarthMJ2000Ec.VX, Mi_Nave.EarthMJ2000Ec.VY, Mi_Nave.EarthMJ2000Ec.VZ};
+
+BeginMissionSequence;
+Report DefaultReportFile Mi_Nave.ElapsedDays Mi_Nave.EarthMJ2000Ec.X Mi_Nave.EarthMJ2000Ec.Y Mi_Nave.EarthMJ2000Ec.Z Mi_Nave.EarthMJ2000Ec.VX Mi_Nave.EarthMJ2000Ec.VY Mi_Nave.EarthMJ2000Ec.VZ;
+Propagate Prop(Mi_Nave) {Mi_Nave.ElapsedDays = 1.0};
+Report DefaultReportFile Mi_Nave.ElapsedDays Mi_Nave.EarthMJ2000Ec.X Mi_Nave.EarthMJ2000Ec.Y Mi_Nave.EarthMJ2000Ec.Z Mi_Nave.EarthMJ2000Ec.VX Mi_Nave.EarthMJ2000Ec.VY Mi_Nave.EarthMJ2000Ec.VZ;
